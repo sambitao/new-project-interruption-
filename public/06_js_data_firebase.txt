@@ -258,8 +258,11 @@
 
 
 
+        let isLoginInProgress = false;
         window.signInAzure = async function() {
+            if (isLoginInProgress) return;
             try {
+                isLoginInProgress = true;
                 $('#login-error').addClass('hidden').text('');
                 const loginRequest = {
                     scopes: ["User.Read"],
@@ -271,7 +274,24 @@
                 }
             } catch (error) {
                 console.error("Login Error:", error);
-                $('#login-error').removeClass('hidden').text('Error: ' + error.message);
+                if (error.errorCode === "user_cancelled") {
+                    // Ignore user cancellation
+                } else if (error.errorCode === "interaction_in_progress") {
+                    // Clear stuck interaction status
+                    const keysToRemove = [];
+                    for (let i = 0; i < sessionStorage.length; i++) {
+                        const key = sessionStorage.key(i);
+                        if (key && key.indexOf("interaction.status") !== -1) {
+                            keysToRemove.push(key);
+                        }
+                    }
+                    keysToRemove.forEach(k => sessionStorage.removeItem(k));
+                    $('#login-error').removeClass('hidden').text('Error: Please try clicking Sign in again.');
+                } else {
+                    $('#login-error').removeClass('hidden').text('Error: ' + error.message);
+                }
+            } finally {
+                isLoginInProgress = false;
             }
         };
 
@@ -292,6 +312,11 @@
         }
 
         async function checkAuthState() {
+            try {
+                await msalInstance.handleRedirectPromise();
+            } catch (err) {
+                console.error("Redirect Error:", err);
+            }
             const currentAccounts = msalInstance.getAllAccounts();
             if (currentAccounts && currentAccounts.length > 0) {
                 processLoginSuccess(currentAccounts[0]);
