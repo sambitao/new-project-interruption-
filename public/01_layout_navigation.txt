@@ -18,10 +18,27 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-    <!-- Firebase SDKs (Compat v8 for existing code compatibility) -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- MSAL Browser SDK for Azure AD -->
+    <script type="text/javascript" src="https://alcdn.msauth.net/browser/2.30.0/js/msal-browser.min.js"></script>
+
+    <script>
+        const msalConfig = {
+            auth: {
+                clientId: "4235115b-e976-4400-8073-47bc6398ff4d",
+                authority: "https://login.microsoftonline.com/b93aa31d-e9dc-41ad-9a6a-3e43366a05ef",
+                redirectUri: window.location.origin
+            },
+            cache: {
+                cacheLocation: "sessionStorage",
+                storeAuthStateInCookie: false,
+            }
+        };
+
+        const msalInstance = new msal.PublicClientApplication(msalConfig);
+    </script>
 
     <script>
         tailwind.config = {
@@ -90,8 +107,26 @@
         }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden text-gray-800">
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden lg:hidden transition-opacity"></div>
+<body class="flex h-screen overflow-hidden text-gray-800 relative">
+    <!-- Azure AD Login Overlay -->
+    <div id="azure-login-overlay" class="fixed inset-0 z-50 bg-gray-50 flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center border border-gray-100">
+            <div class="mb-6 flex justify-center">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg" alt="Microsoft Logo" class="h-12 w-auto">
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2 font-prompt">เข้าสู่ระบบด้วยบัญชีองค์กร</h2>
+            <p class="text-gray-500 mb-8 text-sm font-prompt">Assignment Interruption System</p>
+            <button onclick="signInAzure()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition flex items-center justify-center font-prompt">
+                <i class="fa-brands fa-microsoft mr-2 text-xl"></i>
+                เข้าสู่ระบบ (Sign in)
+            </button>
+            <div id="login-error" class="text-red-500 mt-4 text-sm font-prompt hidden"></div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-app-content" class="flex w-full h-full opacity-0 pointer-events-none transition-opacity duration-500">
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden lg:hidden transition-opacity"></div>
     
     <!-- Sidebar -->
     <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 w-72 bg-white shadow-xl transform -translate-x-full lg:translate-x-0 transition-all duration-300 z-30 flex flex-col h-full border-r border-gray-200 whitespace-nowrap">
@@ -205,7 +240,7 @@
                 
                 <h2 id="page-title" class="text-xl font-bold text-gray-800"><span class="text-brand-500 mr-2">|</span>Assignment Interruption System</h2>
             </div>
-            <div class="flex items-center space-x-4"><div class="flex flex-col items-end"><div id="db-status" class="text-xs px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 flex items-center cursor-pointer hover:bg-gray-200 transition" onclick="testConnection()"><span class="indicator loading" id="status-dot"></span> <span id="status-text" class="font-medium">Connecting...</span></div></div><div class="h-10 w-10 bg-gradient-to-br from-brand-100 to-orange-200 rounded-full flex items-center justify-center text-brand-600 shadow-sm border border-white"><i class="fa-regular fa-user"></i></div></div>
+            <div class="flex items-center space-x-4"><div class="flex flex-col items-end"><div id="db-status" class="text-xs px-3 py-1.5 rounded-full bg-gray-100 text-gray-600 flex items-center cursor-pointer hover:bg-gray-200 transition" onclick="testConnection()"><span class="indicator loading" id="status-dot"></span> <span id="status-text" class="font-medium">Connecting...</span></div></div><div class="h-10 w-10 bg-gradient-to-br from-brand-100 to-orange-200 rounded-full flex items-center justify-center text-brand-600 shadow-sm border border-white cursor-pointer hover:bg-red-100 hover:text-red-600" onclick="signOutAzure()" title="ออกจากระบบ"><i class="fa-solid fa-right-from-bracket"></i></div></div>
         </header>
         
         <div id="content-container" class="flex-1 flex flex-col overflow-visible lg:overflow-hidden relative p-4 lg:p-6 bg-gray-50 min-h-0 h-auto lg:h-full">

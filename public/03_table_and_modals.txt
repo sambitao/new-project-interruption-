@@ -130,31 +130,19 @@
     </div>
 
     <script>
-       // === GLOBAL SETUP ===
-       const firebaseConfig = {
-			   apiKey: "AIzaSyBY0ZewKLp8MJbkq2xxcQ2Z_cz7p04e0EY",
-			   authDomain: "assignment-interruption-final.firebaseapp.com",
-			   projectId: "assignment-interruption-final",
-			   storageBucket: "assignment-interruption-final.firebasestorage.app",
-			   messagingSenderId: "578868197362",
-			   appId: "1:578868197362:web:09649a591443922fe69d6b"
-				};
-				
+        // === GLOBAL SETUP ===
 		const appId = 'assignment-app'; 
-		
-        let auth, db; 
-        try { 
-            firebase.initializeApp(firebaseConfig); 
-            auth = firebase.auth(); 
-            db = firebase.firestore(); 
-        } catch (e) { 
-            console.error("Firebase Init Error:", e); 
-        }
+        
+        // === SUPABASE SETUP ===
+        const supabaseUrl = "https://vuqljmjimixneokqmgxz.supabase.co";
+        const supabaseKey = "sb_publishable__qYLRgzCMAI5UIWIpESjiw_ig15o_S1";
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
         
         const GAS_URL = "https://script.google.com/macros/s/AKfycbx5KFStUdu_gJ-FmB99YluYydM6ObImyUqrF2vGh6DO1gCAK5JWIxz5AGG40B_iViiULQ/exec";
 
         let assignments = [];
         let masterData = {};
+        let linkSupportList = [];
         let currentView = 'calendar';
         let currentCategoryFilter = 'all';
         let rrState = { next: null, prev: null };
@@ -185,9 +173,6 @@
             } 
         };
         const menuConfig = { 'plan_interruption': { title: 'Interruption Plan', isSub: false, isPlan: true, prefix: 'IP', jobTypeKey: 'plan', sheetName: 'Interruption Plan' }, 'summary_plan': { title: 'Project Plan', isSub: false, isPlan: true, prefix: 'Sum', jobTypeKey: 'summary_plan', sheetName: 'Summary Plan' }, 'team': { title: 'Assignment Interruption Team', isSub: false, prefix: 'AI', jobTypeKey: 'team', sheetName: 'Interruption Team' }, 'sub_preventive': { title: 'Assignment Preventive', isSub: true, prefix: 'PVT', jobTypeKey: 'preventive', sheetName: 'Assignment Preventive' }, 'sub_reroute': { title: 'Assignment Reroute', isSub: true, prefix: 'RER', jobTypeKey: 'reroute', sheetName: 'Assignment Reroute' }, 'sub_reconfigure': { title: 'Assignment Reconfigure & Cancel', isSub: true, prefix: 'REF', jobTypeKey: 'reconfigure', sheetName: 'Assignment Reconfigure' }, 'dashboard_analytics': { title: 'Dashboard Analytics', isSub: false, isPlan: false, prefix: 'DB', jobTypeKey: 'team' }, 'sub_dashboard': { title: 'Dashboard Subcontractor', isSub: false, isPlan: false, prefix: 'DBS', jobTypeKey: 'preventive' } };
-
-        function getAssignmentsRef() { return db ? db.collection('assignments') : null; }
-        function getSettingsRef() { return db ? db.collection('settings').doc('masterData') : null; }
         
         function fmtDate(s, d) { if(!s) return '-'; let dt; if(s.seconds) dt = new Date(s.seconds*1000); else dt=new Date(s); if(isNaN(dt.getTime())) return '-'; const day=dt.getDate(), m=dt.getMonth()+1, y=dt.getFullYear()+543, h=String(dt.getHours()).padStart(2,'0'), mn=String(dt.getMinutes()).padStart(2,'0'); return d ? `${day}/${m}/${y}` : `${day}/${m}/${y} ${h}:${mn}`; }
         function extractNS(d) { const a=Array.isArray(d)?d:(d?[d]:[]); const names=[], phones=[]; a.forEach(s=>{ if(s.includes(' - ')){ const p=s.split(' - '); names.push(p[0]); phones.push(p[1]); } else { names.push(s); } }); return {names:names.join(', '), phones:phones.join(', ') || '-'}; }

@@ -13,7 +13,6 @@
         window.saveAssignment = async function() { 
             $.LoadingOverlay("show", { text: "Processing..." });
             const docId = $('#doc-id').val();
-            // Use local mapping if in dashboard mode
             let saveCat = currentCategoryFilter === 'summary_dashboard' ? 'summary_plan' : currentCategoryFilter;
             const config = menuConfig[saveCat];
             if (!config) { $.LoadingOverlay("hide"); Swal.fire('Error','Please select a menu first','error'); return; }
@@ -21,52 +20,66 @@
             let fileUrl = $('#form-file-url').val();
             const fileInput = $('#form-file')[0];
             if (fileInput.files.length > 0) { try { $.LoadingOverlay("text", "Uploading to Drive..."); fileUrl = await uploadToDrive(fileInput.files[0]); } catch (uploadError) { $.LoadingOverlay("hide"); Swal.fire('Upload Failed', 'Cannot upload file to Drive. Please try again.', 'error'); return; } }
-            let data = { category: saveCat || '', internalId: $('#form-internal-id').val() || '', updatedAt: firebase.firestore.FieldValue.serverTimestamp(), jobType: $('#form-job-type').val() || '', description: $('#form-desc').val() || '', agency: $('#form-agency').val() || '', location: $('#form-location').val() || '', remark: $('#form-remark').val() || '', nsRespond: $('#form-ns-respond').val() || [], };
+            
+            const nowIso = new Date().toISOString();
+            
+            let payloadData = { category: saveCat || '', internalId: $('#form-internal-id').val() || '', updatedAt: nowIso, jobType: $('#form-job-type').val() || '', description: $('#form-desc').val() || '', agency: $('#form-agency').val() || '', location: $('#form-location').val() || '', remark: $('#form-remark').val() || '', nsRespond: $('#form-ns-respond').val() || [], };
+            
             if (saveCat === 'summary_plan') {
-                data.routeCode = $('#form-route-code').val(); data.electricDistrict = $('#form-electric-district').val(); data.routeName = $('#form-route-name').val(); data.sideCount = $('#form-side-count').val(); data.gpsStart = $('#form-gps-start').val(); data.gpsEnd = $('#form-gps-end').val(); data.distance = $('#form-distance').val(); data.owner = $('#form-owner').val(); data.crossReq = $('#form-cross-req').val(); data.dueDate = $('#form-due-date-summary').val(); 
-                
-                // Save Sym Impact Logic
+                payloadData.routeCode = $('#form-route-code').val(); payloadData.electricDistrict = $('#form-electric-district').val(); payloadData.routeName = $('#form-route-name').val(); payloadData.sideCount = $('#form-side-count').val(); payloadData.gpsStart = $('#form-gps-start').val(); payloadData.gpsEnd = $('#form-gps-end').val(); payloadData.distance = $('#form-distance').val(); payloadData.owner = $('#form-owner').val(); payloadData.crossReq = $('#form-cross-req').val(); payloadData.dueDate = $('#form-due-date-summary').val(); 
                 let symVal = $('#form-sym-impact').val();
                 if(symVal === 'Other') {
                     symVal = $('#form-sym-impact-other').val();
                 }
-                data.symImpact = symVal;
-
-                const existingItem = docId ? assignments.find(a => a.id === docId) : null; data.actionDate = existingItem ? existingItem.actionDate : new Date().toISOString(); data.planDate = null; data.planStartTime = null; data.planEndTime = null;
+                payloadData.symImpact = symVal;
+                const existingItem = docId ? assignments.find(a => a.id === docId) : null; payloadData.actionDate = existingItem ? existingItem.actionDate : nowIso; payloadData.planDate = null; payloadData.planStartTime = null; payloadData.planEndTime = null;
             } else if (config.isPlan) {
-                const pDate = $('#form-plan-date').val(); const pStart = $('#form-plan-start').val(); const pEnd = $('#form-plan-end').val(); data.actionDate = (pDate && pStart) ? `${pDate}T${pStart}` : (pDate ? `${pDate}T00:00` : new Date().toISOString()); data.planDate = pDate; data.planStartTime = pStart; data.planEndTime = pEnd; data.sentPlanDate = $('#form-sent-plan-date').val(); data.unplannedImpact = $('#form-unplanned-impact').val(); data.cmId = $('#form-interruption-id-cm').val() || ''; data.project = $('#form-project').val() || ''; data.itemCount = $('#form-interruption-item').val() || ''; data.teamReq = $('#form-team-req').val() || ''; data.gps = ''; data.fileName = ''; data.fileUrl = '';
+                const pDate = $('#form-plan-date').val(); const pStart = $('#form-plan-start').val(); const pEnd = $('#form-plan-end').val(); payloadData.actionDate = (pDate && pStart) ? `${pDate}T${pStart}` : (pDate ? `${pDate}T00:00` : nowIso); payloadData.planDate = pDate; payloadData.planStartTime = pStart; payloadData.planEndTime = pEnd; payloadData.sentPlanDate = $('#form-sent-plan-date').val(); payloadData.unplannedImpact = $('#form-unplanned-impact').val(); payloadData.cmId = $('#form-interruption-id-cm').val() || ''; payloadData.project = $('#form-project').val() || ''; payloadData.itemCount = $('#form-interruption-item').val() || ''; payloadData.teamReq = $('#form-team-req').val() || ''; payloadData.gps = ''; payloadData.fileName = ''; payloadData.fileUrl = '';
             } else {
-                data.actionDate = $('#form-action-date').val() || ''; data.fileName = $('#file-name-display').text() || ''; data.fileUrl = fileUrl || ''; data.gps = $('#form-gps').val() || '';
+                payloadData.actionDate = $('#form-action-date').val() || ''; payloadData.fileName = $('#file-name-display').text() || ''; payloadData.fileUrl = fileUrl || ''; payloadData.gps = $('#form-gps').val() || '';
                 if (config.isSub) { 
-                    data.dueDate = $('#form-due-date-sub').val() || ''; 
-                    data.objective = $('#form-objective').val() || ''; 
-                    data.expenses = $('#form-expenses').val() || ''; 
-                    data.routeCode = $('#form-route-code-sub').val() || ''; 
-                    data.subcontractor = $('#form-sub-name').val() || ''; 
+                    payloadData.dueDate = $('#form-due-date-sub').val() || ''; 
+                    payloadData.objective = $('#form-objective').val() || ''; 
+                    payloadData.expenses = $('#form-expenses').val() || ''; 
+                    payloadData.routeCode = $('#form-route-code-sub').val() || ''; 
+                    payloadData.subcontractor = $('#form-sub-name').val() || ''; 
                 }
-                else { data.dueDate = $('#form-due-date').val() || ''; data.teamReq = $('#form-team-req').val() || ''; data.reqPerson = $('#form-req-person').val() || ''; data.refJobId = $('#form-ref-job-id').val() || ''; }
+                else { payloadData.dueDate = $('#form-due-date').val() || ''; payloadData.teamReq = $('#form-team-req').val() || ''; payloadData.reqPerson = $('#form-req-person').val() || ''; payloadData.refJobId = $('#form-ref-job-id').val() || ''; }
             }
-            if(!docId) { data.createdAt = firebase.firestore.FieldValue.serverTimestamp(); data.status = 'new'; }
+            if(!docId) { payloadData.createdAt = nowIso; payloadData.status = 'new'; }
+            
             try {
-                const nowIso = new Date().toISOString();
                 if(docId) {
-                    await getAssignmentsRef().doc(docId).update(data);
-                    const existingItem = assignments.find(a => a.id === docId);
-                    if (existingItem) { const mergedData = { ...existingItem, ...data }; mergedData.updatedAt = nowIso; await sendToSheet(mergedData, config.sheetName); } 
-                    else { data.updatedAt = nowIso; await sendToSheet(data, config.sheetName); }
+                    const existingItem = assignments.find(a => a.id === docId) || {};
+                    const mergedData = { ...existingItem, ...payloadData };
+                    mergedData.updatedAt = nowIso;
+                    const updateObj = { updated_at: nowIso, internal_id: mergedData.internalId, category: saveCat, status: mergedData.status, data: mergedData };
+                    const { error } = await supabaseClient.from('assignments').update(updateObj).eq('id', docId);
+                    if (error) throw error;
+                    await sendToSheet(mergedData, config.sheetName);
                 } else {
-                    await getAssignmentsRef().add(data);
-                    // แก้ไข: ถ้าเป็น Special Job ไม่ต้องอัปเดต Round Robin
-                    if(config.isSub && !docId && data.jobType !== 'Special Job') { 
-                        await updateRoundRobinIndex(false, data.description); 
+                    const insertObj = { created_at: nowIso, updated_at: nowIso, internal_id: payloadData.internalId, category: saveCat, status: 'new', data: payloadData };
+                    const { error } = await supabaseClient.from('assignments').insert([insertObj]);
+                    if (error) throw error;
+                    if(config.isSub && payloadData.jobType !== 'Special Job') { 
+                        await updateRoundRobinIndex(false, payloadData.description); 
                     }
-                    let sheetData = { ...data }; sheetData.createdAt = nowIso; sheetData.updatedAt = nowIso; await sendToSheet(sheetData, config.sheetName); 
+                    await sendToSheet(payloadData, config.sheetName); 
                 }
                 $.LoadingOverlay("hide"); closeModal(); Swal.fire('Saved', '', 'success');
             } catch(e) { $.LoadingOverlay("hide"); Swal.fire('Error', e.message, 'error'); }
         };
-        window.updateStatus = function(id, status, extra) { $.LoadingOverlay("show"); getAssignmentsRef().doc(id).update({status: status, ...extra}).then(async () => { const item = assignments.find(a => a.id === id); if(item) { const u = {...item, status, ...extra}; const c = menuConfig[u.category]; if(c) await sendToSheet(u, c.sheetName); } $.LoadingOverlay("hide"); }).catch(e => { $.LoadingOverlay("hide"); Swal.fire('Error',e.message,'error'); }); };
-        window.deleteAssignment = function(id) { Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true }).then((r) => { if (r.isConfirmed) getAssignmentsRef().doc(id).delete(); }); };
+        window.updateStatus = function(id, status, extra) { $.LoadingOverlay("show"); 
+            const existingItem = assignments.find(a => a.id === id) || {};
+            const mergedData = { ...existingItem, status, ...extra, updatedAt: new Date().toISOString() };
+            supabaseClient.from('assignments').update({ status: status, updated_at: new Date().toISOString(), data: mergedData }).eq('id', id).then(async ({error}) => { 
+                if(error) throw error;
+                const c = menuConfig[mergedData.category]; 
+                if(c) await sendToSheet(mergedData, c.sheetName); 
+                $.LoadingOverlay("hide"); 
+            }).catch(e => { $.LoadingOverlay("hide"); Swal.fire('Error',e.message,'error'); }); 
+        };
+        window.deleteAssignment = function(id) { Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true }).then(async (r) => { if (r.isConfirmed) { await supabaseClient.from('assignments').delete().eq('id', id); } }); };
         window.viewDetail = function(id) { 
             const item = assignments.find(a => a.id === id); if(!item) return; const nsInfo = extractNS(item.nsRespond); const conf = menuConfig[item.category]; const isSub = conf && conf.isSub; const isPlan = conf && conf.isPlan; const fileLink = item.fileUrl ? `<a href="${item.fileUrl}" target="_blank" class="text-blue-500 hover:underline break-all">${item.fileUrl}</a>` : '-'; const fileDisplay = (item.fileUrl && (item.fileUrl.match(/\.(jpeg|jpg|gif|png)$/) != null || item.fileUrl.includes('googleusercontent') || item.fileUrl.includes('drive.google.com'))) ? `<br><img src="${item.fileUrl}" class="mt-2 rounded-lg max-h-48 object-cover border border-gray-200" alt="Attached Image">` : ''; 
             
@@ -243,40 +256,102 @@
             else badgeSub.addClass('hidden');
         };
 
-        async function initAuth() { 
+
+
+        window.signInAzure = async function() {
+            try {
+                $('#login-error').addClass('hidden').text('');
+                const loginRequest = {
+                    scopes: ["User.Read"],
+                    prompt: "select_account"
+                };
+                const response = await msalInstance.loginPopup(loginRequest);
+                if (response && response.account) {
+                    processLoginSuccess(response.account);
+                }
+            } catch (error) {
+                console.error("Login Error:", error);
+                $('#login-error').removeClass('hidden').text('Error: ' + error.message);
+            }
+        };
+
+        window.signOutAzure = async function() {
+            try {
+                await msalInstance.logoutPopup();
+                location.reload();
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
+        function processLoginSuccess(account) {
+            $('#azure-login-overlay').fadeOut();
+            $('#main-app-content').removeClass('opacity-0 pointer-events-none').addClass('opacity-100');
+            $('#status-text').text(account.username).parent().addClass('bg-green-100 text-green-700'); 
+            initApp();
+        }
+
+        async function checkAuthState() {
+            const currentAccounts = msalInstance.getAllAccounts();
+            if (currentAccounts && currentAccounts.length > 0) {
+                processLoginSuccess(currentAccounts[0]);
+            } else {
+                $('#azure-login-overlay').show();
+            }
+        }
+
+        async function initApp() { 
             try { 
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) { 
-                    await auth.signInWithCustomToken(__initial_auth_token); 
-                } else { 
-                    await auth.signInAnonymously(); 
-                } 
-                auth.onAuthStateChanged(user => { 
-                    if(user) { 
-                        $('#status-text').text('Online').parent().addClass('bg-green-100 text-green-700'); 
-                        getAssignmentsRef().onSnapshot(snap => { 
-                            assignments = []; 
-                            snap.forEach(d => assignments.push({id:d.id, ...d.data()})); 
-                            assignments.sort((a,b)=>(b.internalId||'').localeCompare(a.internalId||'')); 
-                            
-                            // Call Badge Update here
-                            window.updateSidebarBadges();
-                            
-                            window.updateView(); 
-                        }, err => console.error("Snapshot Error:", err)); 
-                        
-                        getSettingsRef().onSnapshot(doc => { 
-                            if(doc.exists) { 
-                                masterData = doc.data(); 
-                                window.renderDropdowns(); 
-                                if(currentView === 'setting') window.renderSettings(); 
-                            } else { 
-                                initializeDatabase(false); 
-                            } 
-                        }, err => console.error("Settings Error:", err)); 
-                    } 
-                }); 
+                const loadAssignments = async () => {
+                    const { data, error } = await supabaseClient.from('assignments').select('*').order('internal_id', { ascending: false });
+                    if (error) { console.error("Load Assignments Error:", error); return; }
+                    assignments = data.map(r => ({ id: r.id, ...(r.data || {}), status: r.status, createdAt: r.created_at, updatedAt: r.updated_at, internalId: r.internal_id }));
+                    window.updateSidebarBadges();
+                    window.updateView(); 
+                };
+
+                const loadSettings = async () => {
+                    const { data, error } = await supabaseClient.from('master_settings').select('*').eq('id', 'masterData').single();
+                    if (error && error.code !== 'PGRST116') { console.error("Load Settings Error:", error); return; }
+                    if (data && data.data) {
+                        masterData = data.data;
+                        window.renderDropdowns(); 
+                        if (currentView === 'setting') window.renderSettings(); 
+                    } else {
+                        if (typeof initializeDatabaseMaster === 'function') initializeDatabaseMaster(false);
+                    }
+                };
+
+                const loadLinkSupport = async () => {
+                    const { data, error } = await supabaseClient.from('link_support').select('*').order('created_at', { ascending: true });
+                    if (error) { console.error("Load Link Support Error:", error); return; }
+                    linkSupportList = data || [];
+                    if (currentView === 'link_support') window.renderLinkSupport();
+                };
+
+                // Initial Load
+                loadAssignments();
+                loadSettings();
+                loadLinkSupport();
+
+                // Supabase Real-time Subscriptions
+                supabaseClient.channel('assignments_channel')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'assignments' }, payload => {
+                        loadAssignments();
+                    }).subscribe();
+
+                supabaseClient.channel('settings_channel')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'master_settings' }, payload => {
+                        loadSettings();
+                    }).subscribe();
+
+                supabaseClient.channel('link_support_channel')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'link_support' }, payload => {
+                        loadLinkSupport();
+                    }).subscribe();
+
             } catch (e) { 
-                console.error("Auth Error:", e); 
+                console.error("Init Error:", e); 
                 Swal.fire('Connection Error', e.message, 'error'); 
             } 
         }
@@ -286,7 +361,7 @@
             $('#search-input').on('input', function() { currentPage = 1; renderTable(); }); 
             $('#filter-status').on('change', function() { currentPage = 1; renderTable(); }); 
 			$('#filter-duedate-month').on('change', function() { currentPage = 1; renderTable(); }); 
-            initAuth(); 
+            checkAuthState(); 
             $('#form-file').change(function(e) { $('#file-name-display').text(e.target.files[0] ? e.target.files[0].name : 'Click to upload'); }); 
             document.getElementById('sidebar-overlay').addEventListener('click', toggleSidebar); 
             ['#form-job-type', '#form-agency', '#form-team-req'].forEach(id => { $(id).change(function() { if($(this).val() === 'Other') $(id + '-other').addClass('show'); else $(id + '-other').removeClass('show'); }); }); 

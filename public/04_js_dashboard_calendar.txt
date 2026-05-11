@@ -211,7 +211,7 @@
         window.renderLinkSupport = function() {
             const list = $('#list-link-support');
             list.empty();
-            let links = masterData.linkSupport || [];
+            let links = linkSupportList || [];
             
             // Search Filter
             const searchTerm = $('#ls-search').val() ? $('#ls-search').val().toLowerCase() : '';
@@ -237,16 +237,8 @@
             } else {
                 $('#ls-empty-state').addClass('hidden');
                 
-                const originalLinks = masterData.linkSupport || [];
-                
                 links.forEach((item) => {
-                    let originalIndex = -1;
-                    for(let i=0; i<originalLinks.length; i++) {
-                        if(originalLinks[i].name === item.name && originalLinks[i].url === item.url && originalLinks[i].type === item.type) {
-                            originalIndex = i;
-                            break;
-                        }
-                    }
+                    const originalIndex = item.id;
                     
                     // Link Type Badge Color
                     let badgeColor = 'bg-gray-100 text-gray-800';
@@ -302,7 +294,7 @@
                 if(!type) type = 'Other'; // Fallback if empty
             }
 
-            const editIndexStr = $('#ls-edit-index').val();
+            const editIdStr = $('#ls-edit-index').val();
             
             if (!name || !url || !type) {
                 Swal.fire('แจ้งเตือน', 'กรุณาระบุชื่อ, URL และประเภทให้ครบถ้วน', 'warning');
@@ -316,26 +308,12 @@
             const newItem = { name, url, type, detail };
             
             try {
-                const ref = getSettingsRef();
-                const doc = await ref.get();
-                
-                if (doc.exists) {
-                    let currentLinks = doc.data().linkSupport || [];
-                    
-                    if (editIndexStr !== "") {
-                        const idx = parseInt(editIndexStr);
-                        if (idx >= 0 && idx < currentLinks.length) {
-                            currentLinks[idx] = newItem;
-                            await ref.update({ linkSupport: currentLinks });
-                            Swal.fire({ icon: 'success', title: 'แก้ไขข้อมูลเรียบร้อย', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
-                        }
-                    } else {
-                        currentLinks.push(newItem);
-                        await ref.update({ linkSupport: currentLinks });
-                        Swal.fire({ icon: 'success', title: 'เพิ่มลิงก์เรียบร้อย', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
-                    }
+                if (editIdStr !== "") {
+                    const id = parseInt(editIdStr);
+                    await supabaseClient.from('link_support').update(newItem).eq('id', id);
+                    Swal.fire({ icon: 'success', title: 'แก้ไขข้อมูลเรียบร้อย', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
                 } else {
-                    await ref.set({ linkSupport: [newItem] }, { merge: true });
+                    await supabaseClient.from('link_support').insert([newItem]);
                     Swal.fire({ icon: 'success', title: 'เพิ่มลิงก์เรียบร้อย', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
                 }
                 
@@ -346,15 +324,13 @@
             }
         };
 
-        window.editLinkItem = function(index) {
-            const links = masterData.linkSupport || [];
-            if (index >= 0 && index < links.length) {
-                const item = links[index];
-                
+        window.editLinkItem = function(id) {
+            const item = linkSupportList.find(l => l.id === id);
+            if (item) {
                 $('#ls-name').val(item.name);
                 $('#ls-url').val(item.url);
                 $('#ls-detail').val(item.detail || '');
-                $('#ls-edit-index').val(index);
+                $('#ls-edit-index').val(id);
                 
                 // Handle Type Selection
                 const predefinedTypes = ["Site Access", "Link Support", "Link File Shared"];
@@ -384,8 +360,8 @@
             $('#btn-cancel-link').addClass('hidden');
         };
 
-        window.deleteLinkItem = async function(index) {
-            if(index === -1) return;
+        window.deleteLinkItem = async function(id) {
+            if(id === undefined || id === null) return;
             
             Swal.fire({
                 title: 'ยืนยันการลบ?',
@@ -398,17 +374,9 @@
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     try {
-                        const ref = getSettingsRef();
-                        const doc = await ref.get();
-                        if (doc.exists) {
-                            const currentLinks = doc.data().linkSupport || [];
-                            if (index >= 0 && index < currentLinks.length) {
-                                currentLinks.splice(index, 1);
-                                await ref.update({ linkSupport: currentLinks });
-                                Swal.fire({ icon: 'success', title: 'ลบเรียบร้อย', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
-                                if ($('#ls-edit-index').val() == index) cancelLinkEdit();
-                            }
-                        }
+                        await supabaseClient.from('link_support').delete().eq('id', id);
+                        Swal.fire({ icon: 'success', title: 'ลบเรียบร้อย', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+                        if ($('#ls-edit-index').val() == id) cancelLinkEdit();
                     } catch (error) {
                         Swal.fire('Error', error.message, 'error');
                     }
