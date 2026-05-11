@@ -1,0 +1,394 @@
+            <!-- VIEW: DASHBOARD (MAIN) -->
+            <div id="view-dashboard-analytics" class="view-section flex-1 flex flex-col overflow-visible lg:overflow-auto h-auto lg:h-full hidden">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 mb-6 flex flex-wrap gap-4 items-end">
+                    <div class="w-full sm:w-auto"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">เลือกหมวดงาน</label><select id="dash-filter-category" onchange="renderDashboardCharts()" class="w-full sm:w-48 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500"><option value="all">ทั้งหมด</option><option value="plan_interruption">Interruption Plan</option><option value="team">Interruption Team</option><option value="sub_preventive">Preventive</option><option value="sub_reroute">Reroute</option><option value="sub_reconfigure">Reconfigure & Cancel</option></select></div>
+                    <div class="w-full sm:w-auto"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">ช่วงเวลา</label><div class="flex gap-2"><input type="date" id="dash-date-start" onchange="renderDashboardCharts()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm"><input type="date" id="dash-date-end" onchange="renderDashboardCharts()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm"></div></div>
+                    <div class="w-full sm:w-auto ml-auto flex gap-2">
+                        <button onclick="window.print()" class="print-hide px-4 py-2 bg-gray-600 text-white rounded-lg text-sm hover:bg-gray-700 shadow-md"><i class="fa-solid fa-print mr-1"></i> Print PDF</button>
+                        <button onclick="renderDashboardCharts()" class="print-hide px-4 py-2 bg-brand-500 text-white rounded-lg text-sm hover:bg-brand-600 shadow-md"><i class="fa-solid fa-sync mr-1"></i> Refresh</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-blue-500"><p class="text-gray-500 text-xs font-bold uppercase">Total Jobs</p><h3 class="text-3xl font-bold text-blue-600 mt-1" id="stat-total">0</h3></div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-green-500"><p class="text-gray-500 text-xs font-bold uppercase">Success Rate</p><h3 class="text-3xl font-bold text-green-600 mt-1" id="stat-success">0%</h3><p class="text-xs text-gray-400 mt-1" id="stat-success-count">0 jobs</p></div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-yellow-500"><p class="text-gray-500 text-xs font-bold uppercase">Pending</p><h3 class="text-3xl font-bold text-yellow-600 mt-1" id="stat-pending">0</h3></div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-red-500"><p class="text-gray-500 text-xs font-bold uppercase">Cancelled</p><h3 class="text-3xl font-bold text-red-600 mt-1" id="stat-cancel">0</h3></div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 break-inside-avoid">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200"><h4 class="font-bold text-gray-700 mb-4">ปริมาณงานแยกตามสถานะ</h4><div class="h-64"><canvas id="chartStatus"></canvas></div></div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200"><h4 class="font-bold text-gray-700 mb-4">แนวโน้มงานรายวัน</h4><div class="h-64"><canvas id="chartTrend"></canvas></div></div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 break-inside-avoid">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 lg:col-span-1"><h4 class="font-bold text-gray-700 mb-4">ประเภทงาน</h4><div class="h-64"><canvas id="chartJobType"></canvas></div></div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 lg:col-span-2"><h4 class="font-bold text-gray-700 mb-4">หน่วยงานที่แจ้ง</h4><div class="h-64"><canvas id="chartAgency"></canvas></div></div>
+                </div>
+            </div>
+
+            <!-- VIEW: SUMMARY DASHBOARD (NEW) -->
+            <div id="view-summary-dashboard" class="view-section hidden w-full h-auto lg:h-full lg:overflow-y-auto overflow-visible pb-40">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 mb-6 flex flex-wrap gap-4 items-end">
+                    <div class="flex items-center gap-2 mb-1 w-full"><i class="fa-solid fa-chart-simple text-brand-500"></i><h3 class="font-bold text-gray-700">Project Plan Analytics</h3></div>
+                    <div class="w-full sm:w-auto"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">Job Type</label><select id="sum-dash-jobtype" onchange="renderSummaryDashboard()" class="w-full sm:w-48 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500"><option value="all">ทั้งหมด (All)</option></select></div>
+                    <div class="w-full sm:w-auto"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">ช่วงเวลา (Date Range)</label><div class="flex gap-2"><input type="date" id="sum-dash-start" onchange="renderSummaryDashboard()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm"><input type="date" id="sum-dash-end" onchange="renderSummaryDashboard()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm"></div></div>
+                    <div class="w-full sm:w-auto ml-auto flex gap-2">
+                        <button onclick="renderSummaryDashboard()" class="px-4 py-2 bg-brand-500 text-white rounded-lg text-sm hover:bg-brand-600 shadow-md"><i class="fa-solid fa-sync mr-1"></i> Refresh</button>
+                    </div>
+                </div>
+
+                <!-- 4 Main Stats (Modified Layout for Distances) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-gradient-to-br from-blue-500 to-blue-600 p-5 rounded-2xl shadow-lg text-white relative overflow-hidden">
+                        <div class="relative z-10">
+                            <p class="text-blue-100 text-xs font-bold uppercase mb-2 border-b border-blue-400 pb-1" id="sum-title-route">Total Plan</p>
+                            <div class="flex justify-between items-end mb-1">
+                                <div>
+                                    <h3 class="text-3xl font-bold leading-none" id="sum-stat-route">0</h3>
+                                    <p class="text-[10px] text-blue-100 opacity-80 mt-1">Routes</p>
+                                </div>
+                                <div class="text-right">
+                                    <h3 class="text-2xl font-bold leading-none" id="sum-stat-dist-route">0</h3>
+                                    <p class="text-[10px] text-blue-100 opacity-80 mt-1">Total km.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-route absolute -bottom-4 -right-4 text-8xl text-white opacity-10"></i>
+                    </div>
+                    <div class="bg-gradient-to-br from-orange-500 to-orange-600 p-5 rounded-2xl shadow-lg text-white relative overflow-hidden">
+                        <div class="relative z-10">
+                            <p class="text-orange-100 text-xs font-bold uppercase mb-2 border-b border-orange-400 pb-1">SYMC Impacted</p>
+                            <div class="flex justify-between items-end mb-1">
+                                <div>
+                                    <h3 class="text-3xl font-bold leading-none" id="sum-stat-impact">0</h3>
+                                    <p class="text-[10px] text-orange-100 opacity-80 mt-1">Routes</p>
+                                </div>
+                                <div class="text-right">
+                                    <h3 class="text-2xl font-bold leading-none" id="sum-stat-dist-impact">0</h3>
+                                    <p class="text-[10px] text-orange-100 opacity-80 mt-1">Total km.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-triangle-exclamation absolute -bottom-4 -right-4 text-8xl text-white opacity-10"></i>
+                    </div>
+                    <div class="bg-gradient-to-br from-green-500 to-green-600 p-5 rounded-2xl shadow-lg text-white relative overflow-hidden">
+                        <div class="relative z-10">
+                            <p class="text-green-100 text-xs font-bold uppercase mb-2 border-b border-green-400 pb-1">Completed</p>
+                            <div class="flex justify-between items-end mb-1">
+                                <div>
+                                    <h3 class="text-3xl font-bold leading-none" id="sum-stat-complete">0</h3>
+                                    <p class="text-[10px] text-green-100 opacity-80 mt-1">Routes</p>
+                                </div>
+                                <div class="text-right">
+                                    <h3 class="text-2xl font-bold leading-none" id="sum-stat-dist-complete">0</h3>
+                                    <p class="text-[10px] text-green-100 opacity-80 mt-1">Total km.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-check-circle absolute -bottom-4 -right-4 text-8xl text-white opacity-10"></i>
+                    </div>
+                    <div class="bg-gradient-to-br from-yellow-400 to-yellow-500 p-5 rounded-2xl shadow-lg text-white relative overflow-hidden">
+                        <div class="relative z-10">
+                            <p class="text-yellow-50 text-xs font-bold uppercase mb-2 border-b border-yellow-300 pb-1">On Going</p>
+                            <div class="flex justify-between items-end mb-1">
+                                <div>
+                                    <h3 class="text-3xl font-bold leading-none" id="sum-stat-ongoing">0</h3>
+                                    <p class="text-[10px] text-yellow-50 opacity-80 mt-1">Routes</p>
+                                </div>
+                                <div class="text-right">
+                                    <h3 class="text-2xl font-bold leading-none" id="sum-stat-dist-ongoing">0</h3>
+                                    <p class="text-[10px] text-yellow-50 opacity-80 mt-1">Total km.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-person-digging absolute -bottom-4 -right-4 text-8xl text-white opacity-10"></i>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                        <h4 class="font-bold text-gray-700 mb-4 border-b pb-2">สัดส่วน Job Type (Job Type Distribution)</h4>
+                        <div class="h-72"><canvas id="chartSumJobType"></canvas></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                        <h4 class="font-bold text-gray-700 mb-4 border-b pb-2">สถานะงาน (Job Status Overview)</h4>
+                        <div class="h-72"><canvas id="chartSumStatus"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: SUBCONTRACTOR DASHBOARD (COST ADDED) -->
+            <div id="view-sub-dashboard" class="view-section hidden w-full h-auto lg:h-full lg:overflow-y-auto overflow-visible pb-40">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 mb-6 flex flex-wrap gap-4 items-end">
+                     <div class="w-full sm:w-auto"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">หมวดงาน Subcontractor</label><select id="sub-filter-category" onchange="renderSubDashboardCharts()" class="w-full sm:w-48 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500"><option value="all">ทั้งหมด (All)</option><option value="sub_preventive">Preventive</option><option value="sub_reroute">Reroute</option><option value="sub_reconfigure">Reconfigure & Cancel OFC</option></select></div>
+                    <div class="w-full sm:w-auto"><label class="block text-xs font-bold text-gray-500 uppercase mb-1">ช่วงเวลา</label><div class="flex gap-2"><input type="date" id="sub-date-start" onchange="renderSubDashboardCharts()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm"><input type="date" id="sub-date-end" onchange="renderSubDashboardCharts()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm"></div></div>
+                    <div class="w-full sm:w-auto ml-auto flex gap-2">
+                        <button onclick="window.print()" class="print-hide px-4 py-2 bg-gray-600 text-white rounded-lg text-sm hover:bg-gray-700 shadow-md"><i class="fa-solid fa-print mr-1"></i> Print PDF</button>
+                        <button onclick="renderSubDashboardCharts()" class="print-hide px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 shadow-md"><i class="fa-solid fa-sync mr-1"></i> Update</button>
+                    </div>
+                </div>
+                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-orange-500"><p class="text-gray-500 text-xs font-bold uppercase">Total Sub Jobs</p><h3 class="text-3xl font-bold text-gray-800 mt-1" id="sub-stat-total">0</h3></div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-green-500"><p class="text-gray-500 text-xs font-bold uppercase">Total Expenses</p><h3 class="text-3xl font-bold text-green-600 mt-1" id="sub-stat-cost">0 ฿</h3><p class="text-xs text-gray-400 mt-1">Estimate Cost</p></div>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-blue-500"><p class="text-gray-500 text-xs font-bold uppercase">Active Subs</p><h3 class="text-3xl font-bold text-blue-600 mt-1" id="sub-stat-active">0</h3><p class="text-xs text-gray-400 mt-1">Teams with jobs</p></div>
+                     <div class="bg-white p-5 rounded-2xl shadow-sm border-l-4 border-purple-500"><p class="text-gray-500 text-xs font-bold uppercase">Avg Cost/Job</p><h3 class="text-3xl font-bold text-purple-600 mt-1" id="sub-stat-avg">0 ฿</h3></div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 break-inside-avoid">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                        <h4 class="font-bold text-gray-700 mb-4">สัดส่วนค่าใช้จ่ายตามสถานะ (Cost by Status)</h4>
+                        <div class="h-64"><canvas id="chartSubCostStatus"></canvas></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                        <h4 class="font-bold text-gray-700 mb-4">จำนวนงานและค่าใช้จ่ายผู้รับเหมา (Jobs & Cost per Subcontractor)</h4>
+                        <div class="h-64"><canvas id="chartSubCount"></canvas></div>
+                    </div>
+                </div>
+                 <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden break-inside-avoid">
+                    <div class="p-4 border-b border-gray-100 bg-gray-50"><h4 class="font-bold text-gray-700">สรุปผลงานผู้รับเหมา (Subcontractor Performance Summary)</h4></div>
+                    <div class="overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-gray-100 text-gray-600 uppercase text-xs"><tr><th class="p-3">ชื่อผู้รับเหมา (Name)</th><th class="p-3 text-center">จำนวนงานรวม</th><th class="p-3 text-center">เสร็จสิ้น (Finish)</th><th class="p-3 text-right">ค่าใช้จ่ายรวม (Total Cost)</th></tr></thead><tbody id="table-sub-summary" class="divide-y divide-gray-100"></tbody></table></div>
+                </div>
+                <div class="h-24 w-full"></div>
+            </div>
+
+            <!-- VIEW: CALENDAR -->
+            <div id="view-calendar" class="view-section hidden flex-1 flex flex-col overflow-visible lg:overflow-hidden h-auto lg:h-full">
+                <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-200 h-[600px] lg:h-full flex flex-col overflow-hidden">
+                     <div class="flex flex-col xl:flex-row justify-between items-center mb-4 flex-none gap-4">
+                        <div class="flex items-center space-x-4">
+                            <button onclick="changeCalendarPeriod(-1)" class="w-10 h-10 rounded-full hover:bg-gray-100 text-gray-600 transition flex items-center justify-center border border-gray-200 shadow-sm"><i class="fa-solid fa-chevron-left"></i></button>
+                            <h2 id="calendar-month-year" class="text-xl md:text-2xl font-bold text-gray-800 w-64 text-center"></h2>
+                            <button onclick="changeCalendarPeriod(1)" class="w-10 h-10 rounded-full hover:bg-gray-100 text-gray-600 transition flex items-center justify-center border border-gray-200 shadow-sm"><i class="fa-solid fa-chevron-right"></i></button>
+                        </div>
+                        
+                        <div class="flex gap-2 flex-wrap justify-end">
+                            <!-- Category Filter for Calendar -->
+                            <select id="calendar-filter-category" onchange="renderCalendar()" class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-brand-500 bg-white shadow-sm text-gray-700">
+                                <option value="all">งานทั้งหมด (All)</option>
+                                <option value="plan_interruption">Interruption Plan</option>
+                                <option value="team">Interruption Team</option>
+                                <option value="sub_preventive">Sub: Preventive</option>
+                                <option value="sub_reroute">Sub: Reroute</option>
+                                <option value="sub_reconfigure">Sub: Reconfigure & Cancel</option>
+                            </select>
+
+                            <!-- View Toggle Buttons -->
+                            <div class="bg-gray-100 p-1 rounded-lg flex text-sm font-medium text-gray-500">
+                                <button onclick="setCalendarView('month')" id="btn-view-month" class="px-4 py-1.5 rounded-md transition-all shadow-sm bg-white text-brand-600">Month</button>
+                                <button onclick="setCalendarView('week')" id="btn-view-week" class="px-4 py-1.5 rounded-md transition-all hover:text-gray-700">Week</button>
+                                <button onclick="setCalendarView('day')" id="btn-view-day" class="px-4 py-1.5 rounded-md transition-all hover:text-gray-700">Day</button>
+                            </div>
+                            <button onclick="jumpToToday()" class="px-4 py-1.5 bg-brand-500 text-white rounded-lg text-sm hover:bg-brand-600 shadow-md hover:shadow-lg transition font-medium flex items-center"><i class="fa-solid fa-calendar-day mr-2"></i> วันนี้</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Calendar Header (Days) -->
+                    <div id="calendar-header-days" class="grid grid-cols-7 gap-2 mb-2 text-center font-bold text-gray-500 text-sm flex-none uppercase tracking-wide">
+                        <div class="text-red-500">อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div class="text-brand-500">ส</div>
+                    </div>
+                    
+                    <!-- Calendar Grid Container -->
+                    <div id="calendar-days" class="flex-1 overflow-y-auto pr-1 grid gap-2"></div>
+                </div>
+            </div>
+            
+            <!-- VIEW: DATA TABLE -->
+            <div id="view-datatable" class="view-section hidden flex-1 flex flex-col overflow-visible lg:overflow-hidden h-auto lg:h-full">
+                
+                <!-- PLAN DASHBOARD (NEW: 5 Boxes) -->
+                <div id="plan-dashboard" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 hidden mb-4 flex-none transition-all">
+                    <!-- ... existing plan boxes ... -->
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-blue-500"><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wide">New Job</p><h3 id="plan-count-new" class="text-2xl font-bold text-blue-600">0</h3></div>
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-yellow-500"><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wide">Inprocess</p><h3 id="plan-count-process" class="text-2xl font-bold text-yellow-600">0</h3></div>
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-green-500"><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wide">Complete</p><h3 id="plan-count-complete" class="text-2xl font-bold text-green-600">0</h3></div>
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-cyan-600"><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wide">Update FMS</p><h3 id="plan-count-updatefms" class="text-2xl font-bold text-cyan-700">0</h3></div>
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-red-500"><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wide">Job Cancel</p><h3 id="plan-count-cancel" class="text-2xl font-bold text-red-600">0</h3></div>
+                </div>
+
+                <!-- NEW: SUMMARY PLAN JOB LIST DASHBOARD (4 Boxes) -->
+                <div id="summary-plan-dashboard" class="grid grid-cols-2 sm:grid-cols-4 gap-4 hidden mb-4 flex-none transition-all">
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-blue-500">
+                        <div class="flex justify-between items-center">
+                            <div><p class="text-xs text-gray-500 uppercase font-bold tracking-wide">New Job</p><h3 id="sum-list-new" class="text-2xl font-bold text-blue-600">0</h3></div>
+                            <i class="fa-solid fa-file-circle-plus text-blue-100 text-3xl"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-yellow-500">
+                        <div class="flex justify-between items-center">
+                            <div><p class="text-xs text-gray-500 uppercase font-bold tracking-wide">Inprocess</p><h3 id="sum-list-process" class="text-2xl font-bold text-yellow-600">0</h3></div>
+                            <i class="fa-solid fa-person-digging text-yellow-100 text-3xl"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-green-500">
+                        <div class="flex justify-between items-center">
+                            <div><p class="text-xs text-gray-500 uppercase font-bold tracking-wide">Complete</p><h3 id="sum-list-complete" class="text-2xl font-bold text-green-600">0</h3></div>
+                            <i class="fa-solid fa-circle-check text-green-100 text-3xl"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-red-500">
+                        <div class="flex justify-between items-center">
+                            <div><p class="text-xs text-gray-500 uppercase font-bold tracking-wide">Cancel</p><h3 id="sum-list-cancel" class="text-2xl font-bold text-red-600">0</h3></div>
+                            <i class="fa-solid fa-ban text-red-100 text-3xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB DASHBOARD -->
+                <div id="sub-dashboard" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 hidden mb-4 flex-none transition-all">
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-blue-500"><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wide">New Job</p><h3 id="sub-count-new" class="text-xl font-bold text-blue-600">0</h3><p class="text-[10px] text-gray-400 mt-1" id="sub-cost-new">0 ฿</p></div>
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-yellow-500"><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wide">Inprocess</p><h3 id="sub-count-process" class="text-xl font-bold text-yellow-600">0</h3><p class="text-[10px] text-gray-400 mt-1" id="sub-cost-process">0 ฿</p></div>
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-purple-500"><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wide">Assign Job</p><h3 id="sub-count-assign" class="text-xl font-bold text-purple-600">0</h3><p class="text-[10px] text-gray-400 mt-1" id="sub-cost-assign">0 ฿</p></div>
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-cyan-500"><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wide">Approve Job</p><h3 id="sub-count-approve" class="text-xl font-bold text-cyan-600">0</h3><p class="text-[10px] text-gray-400 mt-1" id="sub-cost-approve">0 ฿</p></div>
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-green-500"><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wide">Finish</p><h3 id="sub-count-finish" class="text-xl font-bold text-green-600">0</h3><p class="text-[10px] text-gray-400 mt-1" id="sub-cost-finish">0 ฿</p></div>
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-red-500"><p class="text-[10px] text-gray-500 uppercase font-bold tracking-wide">Job Cancel</p><h3 id="sub-count-cancel" class="text-xl font-bold text-red-600">0</h3><p class="text-[10px] text-gray-400 mt-1" id="sub-cost-cancel">0 ฿</p></div>
+                </div>
+
+                <!-- TEAM DASHBOARD -->
+                <div id="team-dashboard" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 hidden mb-4 flex-none">
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-blue-500 flex justify-between"><div><p class="text-xs text-gray-500 uppercase font-bold">New Job</p><h3 id="team-count-new" class="text-2xl font-bold text-blue-600">0</h3></div><i class="fa-solid fa-file-circle-plus text-blue-100 text-3xl"></i></div>
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-yellow-500 flex justify-between"><div><p class="text-xs text-gray-500 uppercase font-bold">Inprocess</p><h3 id="team-count-process" class="text-2xl font-bold text-yellow-600">0</h3></div><i class="fa-solid fa-spinner text-yellow-100 text-3xl"></i></div>
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-green-500 flex justify-between"><div><p class="text-xs text-gray-500 uppercase font-bold">Complete</p><h3 id="team-count-complete" class="text-2xl font-bold text-green-600">0</h3></div><i class="fa-solid fa-check-circle text-green-100 text-3xl"></i></div>
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-red-500 flex justify-between"><div><p class="text-xs text-gray-500 uppercase font-bold">Job Cancel</p><h3 id="team-count-cancel" class="text-2xl font-bold text-red-600">0</h3></div><i class="fa-solid fa-ban text-red-100 text-3xl"></i></div>
+                </div>
+
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 flex-none lg:flex-1 flex flex-col overflow-hidden h-auto lg:h-full">
+                    <div class="p-6 flex-none border-b border-gray-100">
+                        <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+                            <div class="flex items-center">
+                                <h3 id="table-header" class="text-xl font-bold text-gray-800 flex items-center"><i class="fa-solid fa-list-ul mr-2 text-brand-500"></i> รายการงาน</h3>
+                                <span id="table-grand-total" class="ml-4 px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full hidden">Total: 0 ฿</span>
+                            </div>
+                            <div class="flex space-x-2"><button onclick="exportExcel()" class="px-4 py-2 bg-green-600 text-white rounded-lg shadow hover:bg-green-700 transition flex items-center text-sm font-medium"><i class="fa-solid fa-file-excel mr-2"></i> Export</button><button onclick="openModal()" class="px-4 py-2 bg-brand-500 text-white rounded-lg shadow hover:bg-brand-600 transition flex items-center text-sm font-medium"><i class="fa-solid fa-plus mr-2"></i> เพิ่มงาน</button></div>
+                        </div>
+                        <div class="flex flex-wrap gap-3 items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
+                            <div class="flex-1 min-w-[200px] relative"><i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i><input type="text" id="search-input" placeholder="ค้นหา Job ID, รายละเอียด..." class="w-full border border-gray-300 rounded-lg pl-10 pr-4 py-2 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-sm transition"></div>
+                            <input type="month" id="filter-duedate-month" class="hidden border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 bg-white" title="กรองตามเดือน (Due Date)">
+                            <select id="filter-status" onchange="renderTable()" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-brand-500 bg-white"><option value="all">สถานะทั้งหมด</option><option value="new">New Job</option><option value="process">Inprocess</option><option value="assign">Assign</option><option value="approve">Approve</option><option value="finish">Finish</option><option value="complete">Complete</option><option value="update_fms">Update FMS</option><option value="cancel">Cancel</option></select>
+                        </div>
+                    </div>
+                    <div class="flex-1 overflow-auto bg-white relative"><table class="w-full text-left border-collapse min-w-[1200px]" id="data-table"><thead class="bg-gray-50 text-gray-600 text-xs uppercase sticky top-0 z-10 shadow-sm font-semibold tracking-wider"><tr id="table-header-row"></tr></thead><tbody id="table-body" class="text-xs divide-y divide-gray-100"></tbody></table><div id="empty-state" class="hidden py-20 text-center text-gray-400 absolute inset-0 flex items-center justify-center flex-col pointer-events-none"><i class="fa-regular fa-folder-open text-5xl mb-4 text-gray-300"></i><p class="text-sm font-medium">ไม่พบข้อมูลในระบบ</p></div></div>
+                    <div class="flex-none p-4 border-t border-gray-100 bg-gray-50 flex justify-between items-center text-xs text-gray-500">
+                        <div class="flex items-center gap-2">Rows per page: 
+                            <select id="rows-per-page" onchange="changeRowsPerPage()" class="border rounded p-1 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+                                <option value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="30">30</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                                <option value="all">All</option>
+                            </select>
+                        </div>
+                        <div id="pagination-controls" class="flex items-center gap-2"></div><div id="pagination-info"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- SETTING View -->
+            <div id="view-setting" class="view-section hidden flex-1 flex flex-col overflow-auto">
+                <div class="max-w-6xl mx-auto w-full space-y-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4"><div><h3 class="text-2xl font-bold text-gray-800 flex items-center"><i class="fa-solid fa-database mr-3 text-brand-500"></i> ฐานข้อมูล (Master Data)</h3><p class="text-sm text-gray-500 mt-1">จัดการเฉพาะข้อมูล Subcontractor และ NS Respond</p></div><button onclick="confirmClearDatabase()" class="px-5 py-2.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-sm font-medium border border-red-200 transition flex items-center shadow-sm"><i class="fa-solid fa-trash-can mr-2"></i> ล้างข้อมูลทั้งหมด (Reset Database)</button></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col"><h4 class="font-bold text-gray-800 mb-4 pb-3 border-b border-gray-100 flex items-center"><i class="fa-solid fa-helmet-safety text-orange-500 mr-2"></i> Subcontractors (Round Robin)</h4><div class="flex gap-2 mb-4"><input type="text" id="add-sub" class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-brand-500 focus:outline-none" placeholder="ชื่อทีม..."><button onclick="addSettingItem('subcontractors', 'add-sub')" class="bg-brand-500 text-white px-4 rounded-lg hover:bg-brand-600 shadow-md transition"><i class="fa-solid fa-plus"></i></button></div><ul id="list-subcontractors" class="space-y-2 overflow-y-auto flex-1 max-h-64 pr-2 scrollbar-thin"></ul></div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 flex flex-col"><h4 class="font-bold text-gray-800 mb-4 pb-3 border-b border-gray-100 flex items-center"><i class="fa-solid fa-user-tag text-blue-500 mr-2"></i> NS Respond</h4><div class="flex gap-2 mb-4"><input type="text" id="add-ns-name" class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-blue-500 focus:outline-none" placeholder="ชื่อ..."><input type="text" id="add-ns-phone" class="w-28 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:border-blue-500 focus:outline-none" placeholder="โทร..."><button onclick="addNSRespond()" class="bg-blue-500 text-white px-4 rounded-lg hover:bg-blue-600 shadow-md transition"><i class="fa-solid fa-plus"></i></button></div><ul id="list-nsRespond" class="space-y-2 overflow-y-auto flex-1 max-h-64 pr-2 scrollbar-thin"></ul></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: LINK SUPPORT (NEW) -->
+            <div id="view-link-support" class="view-section hidden flex-1 flex flex-col overflow-auto">
+                <div class="max-w-7xl mx-auto w-full p-4 md:p-6 space-y-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                            <span class="bg-brand-100 text-brand-600 p-2 rounded-lg mr-3 shadow-sm"><i class="fa-solid fa-link"></i></span> Link Support Center
+                        </h3>
+                        
+                        <!-- Add/Edit Form -->
+                        <div class="bg-gray-50 p-5 rounded-xl border border-gray-100 mb-6 shadow-inner">
+                            <label class="block text-sm font-bold text-gray-600 mb-3 uppercase tracking-wide">จัดการลิงก์ (Manage Links)</label>
+                            
+                            <!-- Hidden input to store index for editing -->
+                            <input type="hidden" id="ls-edit-index" value="">
+
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs text-gray-500 mb-1">ชื่อเว็บไซต์ (Name) <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><i class="fa-solid fa-tag"></i></div>
+                                        <input type="text" id="ls-name" class="w-full pl-10 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="ชื่อเว็บ...">
+                                    </div>
+                                </div>
+                                <div class="md:col-span-3">
+                                    <label class="block text-xs text-gray-500 mb-1">URL (Address) <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><i class="fa-solid fa-globe"></i></div>
+                                        <input type="url" id="ls-url" class="w-full pl-10 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="https://...">
+                                    </div>
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs text-gray-500 mb-1">ประเภท (Type) <span class="text-red-500">*</span></label>
+                                    <select id="ls-type" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                                        <option value="">เลือก...</option>
+                                        <option value="Site Access">Site Access</option>
+                                        <option value="Link Support">Link Support</option>
+                                        <option value="Link File Shared">Link File Shared</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                    <input type="text" id="ls-type-other" class="w-full mt-2 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 hidden bg-white" placeholder="ระบุประเภทอื่นๆ...">
+                                </div>
+                                <div class="md:col-span-3">
+                                    <label class="block text-xs text-gray-500 mb-1">รายละเอียด (Detail)</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><i class="fa-solid fa-circle-info"></i></div>
+                                        <input type="text" id="ls-detail" class="w-full pl-10 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="คำอธิบายเพิ่มเติม...">
+                                    </div>
+                                </div>
+                                <div class="md:col-span-2 flex gap-2 mt-6 md:mt-0 items-end h-full pb-0.5">
+                                    <button onclick="saveLinkItem()" id="btn-save-link" class="flex-1 bg-brand-500 text-white px-4 py-2 rounded-lg hover:bg-brand-600 shadow-md transition font-medium text-sm flex items-center justify-center h-[38px]">
+                                        <i class="fa-solid fa-plus mr-1"></i> เพิ่ม
+                                    </button>
+                                    <button onclick="cancelLinkEdit()" id="btn-cancel-link" class="hidden bg-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-400 shadow-sm transition font-medium text-sm h-[38px]">
+                                        ยกเลิก
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Search Bar & Filter -->
+                        <div class="mb-4 flex flex-col md:flex-row gap-3">
+                            <div class="flex-1 relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><i class="fa-solid fa-magnifying-glass"></i></div>
+                                <input type="text" id="ls-search" oninput="renderLinkSupport()" class="w-full pl-10 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition" placeholder="ค้นหาชื่อเว็บไซต์, URL, ประเภท หรือรายละเอียด...">
+                            </div>
+                            <div class="w-full md:w-48">
+                                <select id="ls-filter-type" onchange="renderLinkSupport()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white">
+                                    <option value="all">ทุกประเภท (All Types)</option>
+                                    <option value="Site Access">Site Access</option>
+                                    <option value="Link Support">Link Support</option>
+                                    <option value="Link File Shared">Link File Shared</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Link List Table -->
+                        <div class="overflow-x-auto border border-gray-200 rounded-xl shadow-sm">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-1/5">ชื่อเว็บไซต์ (Name)</th>
+                                        <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-1/5">URL (Address)</th>
+                                        <th scope="col" class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-1/6">Link Type</th>
+                                        <th scope="col" class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">รายละเอียด (Detail)</th>
+                                        <th scope="col" class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider w-28">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="list-link-support" class="bg-white divide-y divide-gray-200">
+                                    <!-- Items will be injected here -->
+                                </tbody>
+                            </table>
+                            <div id="ls-empty-state" class="hidden py-12 text-center flex flex-col items-center justify-center text-gray-400 bg-white">
+                                <div class="bg-gray-100 p-4 rounded-full mb-3"><i class="fa-solid fa-link-slash text-2xl text-gray-300"></i></div>
+                                <p class="text-sm">ยังไม่มีรายการลิงก์ในระบบ</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>

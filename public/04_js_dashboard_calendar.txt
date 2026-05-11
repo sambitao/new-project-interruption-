@@ -1,0 +1,651 @@
+
+        // === FUNCTION DEFINITIONS ===
+
+        // === CALENDAR FUNCTIONS (REFACTORED) ===
+        window.setCalendarView = function(mode) {
+            calendarViewMode = mode;
+            // Update buttons styling
+            ['month', 'week', 'day'].forEach(m => {
+                const btn = $(`#btn-view-${m}`);
+                if (m === mode) {
+                    btn.addClass('bg-white text-brand-600 shadow-sm').removeClass('hover:text-gray-700');
+                } else {
+                    btn.removeClass('bg-white text-brand-600 shadow-sm').addClass('hover:text-gray-700');
+                }
+            });
+            window.renderCalendar();
+        };
+
+        window.changeCalendarPeriod = function(step) {
+            if (calendarViewMode === 'month') {
+                currentCalendarDate.setMonth(currentCalendarDate.getMonth() + step);
+            } else if (calendarViewMode === 'week') {
+                currentCalendarDate.setDate(currentCalendarDate.getDate() + (step * 7));
+            } else { // day
+                currentCalendarDate.setDate(currentCalendarDate.getDate() + step);
+            }
+            // Sync legacy vars just in case
+            currentMonth = currentCalendarDate.getMonth();
+            currentYear = currentCalendarDate.getFullYear();
+            window.renderCalendar();
+        };
+
+        window.jumpToToday = function() {
+            currentCalendarDate = new Date();
+            currentMonth = currentCalendarDate.getMonth();
+            currentYear = currentCalendarDate.getFullYear();
+            window.renderCalendar();
+        };
+
+        window.renderCalendar = function() {
+            const container = document.getElementById("calendar-days");
+            const headerRow = document.getElementById("calendar-header-days");
+            if (!container) return;
+            container.innerHTML = "";
+
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            const thaiMonths = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+            const shortThaiMonths = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+
+            // Helper to render jobs
+            const getJobsForDate = (dateStr) => {
+                const catFilter = $('#calendar-filter-category').val();
+                
+                return assignments.filter(a => {
+                    const isDateMatch = (a.actionDate||'').startsWith(dateStr);
+                    const isStatusValid = a.status!=='new' && a.status!=='cancel';
+                    const isTypeValid = a.category !== 'summary_plan';
+                    
+                    if (!isDateMatch || !isStatusValid || !isTypeValid) return false;
+                    
+                    // Filter by Category
+                    if (catFilter && catFilter !== 'all') {
+                        return a.category === catFilter;
+                    }
+                    return true;
+                }).sort((a,b) => (a.actionDate||'').localeCompare(b.actionDate||''));
+            };
+
+            const createJobHTML = (j, isCompact = true) => {
+                let cl = j.status==='process'?'bg-yellow-100 text-yellow-800 border-yellow-200':(j.status==='finish'||j.status==='complete'?'bg-green-100 text-green-800 border-green-200':'bg-gray-100 border-gray-200');
+                const time = j.actionDate.split('T')[1].slice(0,5);
+                
+                if (isCompact) {
+                    return `<div class="text-[10px] ${cl} border rounded px-1.5 py-0.5 mb-1 truncate cursor-pointer hover:shadow-md transition" onclick="viewDetail('${j.id}'); event.stopPropagation();" title="${j.description}">
+                        <b>${time}</b> ${j.internalId}
+                    </div>`;
+                } else {
+                    // Detailed card for Week/Day view
+                    return `<div class="flex flex-col ${cl} border rounded-lg p-2 mb-2 cursor-pointer hover:shadow-md transition relative group" onclick="viewDetail('${j.id}'); event.stopPropagation();">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="font-bold text-xs bg-white bg-opacity-50 px-1 rounded">${time}</span>
+                            <span class="text-[10px] font-mono opacity-70">${j.internalId}</span>
+                        </div>
+                        <div class="text-xs font-semibold truncate leading-tight">${j.description}</div>
+                        <div class="text-[10px] mt-1 opacity-80 truncate"><i class="fa-solid fa-user-tag mr-1"></i>${(j.subcontractor || j.teamReq || '-')}</div>
+                        <div class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-magnifying-glass-plus text-gray-500"></i></div>
+                    </div>`;
+                }
+            };
+
+            if (calendarViewMode === 'month') {
+                // === MONTH VIEW ===
+                $('#calendar-month-year').text(`${thaiMonths[month]} ${year + 543}`);
+                if(headerRow) headerRow.classList.remove('hidden');
+                container.className = "grid grid-cols-7 gap-2 flex-1 overflow-y-auto custom-scrollbar content-start"; // Fixed grid
+
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+                for(let i=0; i<firstDay; i++) container.appendChild(document.createElement("div"));
+                
+                for(let i=1; i<=daysInMonth; i++) {
+                    const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                    const jobs = getJobsForDate(ds);
+                    const el = document.createElement("div"); 
+                    
+                    // Highlight today
+                    const today = new Date();
+                    const isToday = i === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+                    const borderClass = isToday ? "border-brand-500 ring-1 ring-brand-200" : "border-gray-200";
+                    const bgClass = isToday ? "bg-brand-50" : "bg-white";
+
+                    el.className = `calendar-day relative min-h-[100px] border rounded-xl p-1 hover:bg-gray-50 overflow-hidden flex flex-col ${borderClass} ${bgClass}`;
+                    
+                    let h = ''; jobs.forEach(j => h += createJobHTML(j, true));
+                    el.innerHTML = `<div class="text-right text-xs font-bold ${isToday ? 'text-brand-600' : 'text-gray-400'} mb-1 mr-1">${i}</div><div class="overflow-y-auto flex-1 custom-scrollbar w-full">${h}</div>`;
+                    container.appendChild(el);
+                }
+
+            } else if (calendarViewMode === 'week') {
+                // === WEEK VIEW ===
+                // Calculate start of week (Sunday)
+                const startOfWeek = new Date(currentCalendarDate);
+                startOfWeek.setDate(currentCalendarDate.getDate() - currentCalendarDate.getDay());
+                const endOfWeek = new Date(startOfWeek);
+                endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+                const sDay = startOfWeek.getDate(), sMonth = shortThaiMonths[startOfWeek.getMonth()];
+                const eDay = endOfWeek.getDate(), eMonth = shortThaiMonths[endOfWeek.getMonth()];
+                $('#calendar-month-year').text(`${sDay} ${sMonth} - ${eDay} ${eMonth} ${endOfWeek.getFullYear()+543}`);
+                
+                if(headerRow) headerRow.classList.remove('hidden');
+                container.className = "grid grid-cols-7 gap-2 flex-1 overflow-y-hidden h-full"; // Columns extend full height
+
+                for(let i=0; i<7; i++) {
+                    const d = new Date(startOfWeek);
+                    d.setDate(startOfWeek.getDate() + i);
+                    const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                    const jobs = getJobsForDate(ds);
+                    
+                    const isToday = d.toDateString() === new Date().toDateString();
+                    const borderClass = isToday ? "border-brand-500 bg-brand-50" : "border-gray-200 bg-white";
+
+                    const el = document.createElement("div");
+                    el.className = `flex flex-col h-full border rounded-xl overflow-hidden ${borderClass}`;
+                    
+                    let h = ''; jobs.forEach(j => h += createJobHTML(j, false)); // Use detailed card
+                    
+                    el.innerHTML = `
+                        <div class="p-2 text-center border-b ${isToday ? 'border-brand-200 bg-brand-100' : 'border-gray-100 bg-gray-50'}">
+                            <div class="text-lg font-bold ${isToday ? 'text-brand-700' : 'text-gray-700'}">${d.getDate()}</div>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-1 custom-scrollbar space-y-1">
+                            ${h}
+                        </div>
+                    `;
+                    container.appendChild(el);
+                }
+
+            } else {
+                // === DAY VIEW ===
+                $('#calendar-month-year').text(`${currentCalendarDate.getDate()} ${thaiMonths[currentCalendarDate.getMonth()]} ${currentCalendarDate.getFullYear()+543}`);
+                if(headerRow) headerRow.classList.add('hidden'); // Hide Sun-Sat header
+                container.className = "flex flex-col h-full overflow-hidden bg-white border rounded-xl";
+
+                const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(currentCalendarDate.getDate()).padStart(2,'0')}`;
+                const jobs = getJobsForDate(ds);
+
+                if (jobs.length === 0) {
+                    container.innerHTML = `<div class="flex-1 flex flex-col items-center justify-center text-gray-400">
+                        <i class="fa-regular fa-calendar-xmark text-6xl mb-4 text-gray-200"></i>
+                        <p>ไม่มีงานในวันนี้</p>
+                    </div>`;
+                } else {
+                    let html = `<div class="flex-1 overflow-y-auto p-4 custom-scrollbar"><div class="space-y-3">`;
+                    jobs.forEach(j => {
+                        let statusColor = j.status==='process'?'border-l-4 border-yellow-400':(j.status==='finish'||j.status==='complete'?'border-l-4 border-green-500':'border-l-4 border-blue-500');
+                        let time = j.actionDate.split('T')[1].slice(0,5);
+                        
+                        html += `
+                        <div class="flex items-start bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition cursor-pointer ${statusColor}" onclick="viewDetail('${j.id}')">
+                            <div class="mr-4 text-center min-w-[60px]">
+                                <div class="text-xl font-bold text-gray-800">${time}</div>
+                                <div class="text-xs text-gray-500 uppercase font-bold mt-1 tracking-wider">${j.status}</div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start">
+                                    <h4 class="font-bold text-lg text-gray-800">${j.description}</h4>
+                                    <span class="font-mono text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">${j.internalId}</span>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 text-sm text-gray-600">
+                                    <div><i class="fa-solid fa-helmet-safety w-5 text-center text-orange-500"></i> ${j.subcontractor || j.teamReq || '-'}</div>
+                                    <div><i class="fa-solid fa-location-dot w-5 text-center text-red-500"></i> ${j.location || '-'}</div>
+                                    <div><i class="fa-solid fa-user w-5 text-center text-blue-500"></i> ${extractNS(j.nsRespond).names}</div>
+                                    <div><i class="fa-solid fa-phone w-5 text-center text-green-500"></i> ${extractNS(j.nsRespond).phones}</div>
+                                </div>
+                            </div>
+                            <div class="ml-4 flex items-center justify-center self-center text-gray-300">
+                                <i class="fa-solid fa-chevron-right"></i>
+                            </div>
+                        </div>`;
+                    });
+                    html += `</div></div>`;
+                    container.innerHTML = html;
+                }
+            }
+        };
+
+        // === LINK SUPPORT FUNCTIONS (NEW) ===
+        window.renderLinkSupport = function() {
+            const list = $('#list-link-support');
+            list.empty();
+            let links = masterData.linkSupport || [];
+            
+            // Search Filter
+            const searchTerm = $('#ls-search').val() ? $('#ls-search').val().toLowerCase() : '';
+            // Type Filter
+            const filterType = $('#ls-filter-type').val();
+
+            links = links.filter(l => {
+                const matchesSearch = 
+                    (l.name && l.name.toLowerCase().includes(searchTerm)) || 
+                    (l.url && l.url.toLowerCase().includes(searchTerm)) ||
+                    (l.type && l.type.toLowerCase().includes(searchTerm)) ||
+                    (l.detail && l.detail.toLowerCase().includes(searchTerm));
+                
+                const matchesType = (filterType === 'all' || !filterType) ? true : (l.type === filterType);
+                
+                return matchesSearch && matchesType;
+            });
+            
+            if (links.length === 0) {
+                $('#ls-empty-state').removeClass('hidden');
+                if(searchTerm || filterType !== 'all') $('#ls-empty-state p').text('ไม่พบข้อมูลที่ค้นหา');
+                else $('#ls-empty-state p').text('ยังไม่มีรายการลิงก์ในระบบ');
+            } else {
+                $('#ls-empty-state').addClass('hidden');
+                
+                const originalLinks = masterData.linkSupport || [];
+                
+                links.forEach((item) => {
+                    let originalIndex = -1;
+                    for(let i=0; i<originalLinks.length; i++) {
+                        if(originalLinks[i].name === item.name && originalLinks[i].url === item.url && originalLinks[i].type === item.type) {
+                            originalIndex = i;
+                            break;
+                        }
+                    }
+                    
+                    // Link Type Badge Color
+                    let badgeColor = 'bg-gray-100 text-gray-800';
+                    const t = item.type || '-';
+                    if(t === 'Site Access') badgeColor = 'bg-blue-100 text-blue-800';
+                    else if(t === 'Link Support') badgeColor = 'bg-purple-100 text-purple-800';
+                    else if(t === 'Link File Shared') badgeColor = 'bg-orange-100 text-orange-800';
+                    
+                    const row = `
+                        <tr class="hover:bg-gray-50 transition-colors group">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-8 w-8 rounded-full bg-brand-50 flex items-center justify-center text-brand-500 mr-3 border border-brand-100">
+                                        <i class="fa-solid fa-globe text-xs"></i>
+                                    </div>
+                                    <div class="text-sm font-bold text-gray-700">${item.name}</div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <a href="${item.url}" target="_blank" class="text-sm text-blue-600 hover:text-blue-800 hover:underline block break-all line-clamp-2" title="${item.url}">
+                                    ${item.url} <i class="fa-solid fa-arrow-up-right-from-square ml-1.5 text-xs opacity-50"></i>
+                                </a>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full ${badgeColor}">${t}</span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="text-sm text-gray-500">${item.detail || '-'}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <button onclick="editLinkItem(${originalIndex})" class="text-gray-300 hover:text-blue-500 transition-colors p-1.5 rounded-md hover:bg-blue-50 mr-1" title="แก้ไข">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button onclick="deleteLinkItem(${originalIndex})" class="text-gray-300 hover:text-red-500 transition-colors p-1.5 rounded-md hover:bg-red-50" title="ลบ">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    list.append(row);
+                });
+            }
+        };
+
+        window.saveLinkItem = async function() {
+            const name = $('#ls-name').val().trim();
+            let url = $('#ls-url').val().trim();
+            const detail = $('#ls-detail').val().trim();
+            let type = $('#ls-type').val();
+            
+            if(type === 'Other') {
+                type = $('#ls-type-other').val().trim();
+                if(!type) type = 'Other'; // Fallback if empty
+            }
+
+            const editIndexStr = $('#ls-edit-index').val();
+            
+            if (!name || !url || !type) {
+                Swal.fire('แจ้งเตือน', 'กรุณาระบุชื่อ, URL และประเภทให้ครบถ้วน', 'warning');
+                return;
+            }
+
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+
+            const newItem = { name, url, type, detail };
+            
+            try {
+                const ref = getSettingsRef();
+                const doc = await ref.get();
+                
+                if (doc.exists) {
+                    let currentLinks = doc.data().linkSupport || [];
+                    
+                    if (editIndexStr !== "") {
+                        const idx = parseInt(editIndexStr);
+                        if (idx >= 0 && idx < currentLinks.length) {
+                            currentLinks[idx] = newItem;
+                            await ref.update({ linkSupport: currentLinks });
+                            Swal.fire({ icon: 'success', title: 'แก้ไขข้อมูลเรียบร้อย', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+                        }
+                    } else {
+                        currentLinks.push(newItem);
+                        await ref.update({ linkSupport: currentLinks });
+                        Swal.fire({ icon: 'success', title: 'เพิ่มลิงก์เรียบร้อย', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+                    }
+                } else {
+                    await ref.set({ linkSupport: [newItem] }, { merge: true });
+                    Swal.fire({ icon: 'success', title: 'เพิ่มลิงก์เรียบร้อย', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+                }
+                
+                cancelLinkEdit(); 
+            } catch (error) {
+                console.error("Error saving link:", error);
+                Swal.fire('Error', 'บันทึกไม่สำเร็จ: ' + error.message, 'error');
+            }
+        };
+
+        window.editLinkItem = function(index) {
+            const links = masterData.linkSupport || [];
+            if (index >= 0 && index < links.length) {
+                const item = links[index];
+                
+                $('#ls-name').val(item.name);
+                $('#ls-url').val(item.url);
+                $('#ls-detail').val(item.detail || '');
+                $('#ls-edit-index').val(index);
+                
+                // Handle Type Selection
+                const predefinedTypes = ["Site Access", "Link Support", "Link File Shared"];
+                if (predefinedTypes.includes(item.type)) {
+                    $('#ls-type').val(item.type).trigger('change');
+                } else {
+                    $('#ls-type').val('Other').trigger('change');
+                    $('#ls-type-other').val(item.type);
+                }
+                
+                $('#btn-save-link').html('<i class="fa-solid fa-save mr-1"></i> บันทึก').removeClass('bg-brand-500 hover:bg-brand-600').addClass('bg-green-600 hover:bg-green-700');
+                $('#btn-cancel-link').removeClass('hidden');
+                
+                $('#ls-name').focus();
+            }
+        };
+
+        window.cancelLinkEdit = function() {
+            $('#ls-name').val('');
+            $('#ls-url').val('');
+            $('#ls-detail').val('');
+            $('#ls-type').val('').trigger('change');
+            $('#ls-type-other').val('');
+            $('#ls-edit-index').val('');
+            
+            $('#btn-save-link').html('<i class="fa-solid fa-plus mr-1"></i> เพิ่ม').removeClass('bg-green-600 hover:bg-green-700').addClass('bg-brand-500 hover:bg-brand-600');
+            $('#btn-cancel-link').addClass('hidden');
+        };
+
+        window.deleteLinkItem = async function(index) {
+            if(index === -1) return;
+            
+            Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: "คุณต้องการลบลิงก์นี้ใช่หรือไม่",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'ลบ',
+                cancelButtonText: 'ยกเลิก'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const ref = getSettingsRef();
+                        const doc = await ref.get();
+                        if (doc.exists) {
+                            const currentLinks = doc.data().linkSupport || [];
+                            if (index >= 0 && index < currentLinks.length) {
+                                currentLinks.splice(index, 1);
+                                await ref.update({ linkSupport: currentLinks });
+                                Swal.fire({ icon: 'success', title: 'ลบเรียบร้อย', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+                                if ($('#ls-edit-index').val() == index) cancelLinkEdit();
+                            }
+                        }
+                    } catch (error) {
+                        Swal.fire('Error', error.message, 'error');
+                    }
+                }
+            });
+        };
+
+        // NEW: Robust Setting Render Function
+        window.renderSettings = function() {
+            const listSub = $('#list-subcontractors');
+            const listNs = $('#list-nsRespond');
+            
+            if (listSub.length === 0 || listNs.length === 0) return; // Safety check
+
+            listSub.empty();
+            listNs.empty();
+
+            // Handle case sensitivity and fallback
+            const subs = masterData.subcontractors || masterData.Subcontractors || [];
+            const ns = masterData.nsRespond || masterData.NsRespond || [];
+
+            if (subs.length === 0) {
+                listSub.append('<li class="text-gray-400 text-sm text-center p-2">ไม่มีข้อมูล</li>');
+            } else {
+                subs.forEach(item => {
+                    // Determine key for removal
+                    const key = masterData.subcontractors ? 'subcontractors' : 'Subcontractors';
+                    listSub.append(`
+                        <li class="flex justify-between items-center bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm shadow-sm">
+                            <span class="font-medium text-gray-700">${item}</span>
+                            <button onclick="removeSettingItem('${key}', '${item}')" class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </li>
+                    `);
+                });
+            }
+
+            if (ns.length === 0) {
+                listNs.append('<li class="text-gray-400 text-sm text-center p-2">ไม่มีข้อมูล</li>');
+            } else {
+                ns.forEach(item => {
+                    const key = masterData.nsRespond ? 'nsRespond' : 'NsRespond';
+                    listNs.append(`
+                        <li class="flex justify-between items-center bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm shadow-sm">
+                            <span class="font-medium text-gray-700">${item}</span>
+                            <button onclick="removeSettingItem('${key}', '${item}')" class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </li>
+                    `);
+                });
+            }
+        };
+
+        window.renderSummaryDashboard = function() {
+            const jobTypeFilter = $('#sum-dash-jobtype').val();
+            const dateStart = $('#sum-dash-start').val();
+            const dateEnd = $('#sum-dash-end').val();
+
+            // Data source: Only summary_plan category
+            let data = assignments.filter(a => a.category === 'summary_plan');
+
+            // Apply Filters
+            if(jobTypeFilter !== 'all') {
+                data = data.filter(a => a.jobType === jobTypeFilter);
+            }
+            if(dateStart) {
+                // Using dueDate for Summary Plan date filter if available, or createdAt fallback
+                data = data.filter(a => {
+                    const d = a.dueDate ? new Date(a.dueDate) : (a.actionDate ? new Date(a.actionDate) : null);
+                    return d && d >= new Date(dateStart);
+                });
+            }
+            if(dateEnd) {
+                data = data.filter(a => {
+                    const d = a.dueDate ? new Date(a.dueDate) : (a.actionDate ? new Date(a.actionDate) : null);
+                    return d && d <= new Date(dateEnd);
+                });
+            }
+
+            // Helper to sum distance safely
+            const sumDist = (arr) => arr.reduce((acc, curr) => acc + (parseFloat(curr.distance) || 0), 0);
+
+            // --- Calculate Stats ---
+            // 1. Amount Route [JobType/All]
+            const totalCount = data.length;
+            const totalDist = sumDist(data);
+            
+            $('#sum-stat-route').text(totalCount);
+            $('#sum-stat-dist-route').text(totalDist.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+            $('#sum-title-route').text(jobTypeFilter !== 'all' ? `Total Plan (${jobTypeFilter})` : 'Total Plan');
+
+            // 2. Amount Route SYMC Impact
+            const impactData = data.filter(a => a.symImpact && a.symImpact.trim() !== '' && a.symImpact !== '-');
+            const impactCount = impactData.length;
+            const impactDist = sumDist(impactData);
+            
+            $('#sum-stat-impact').text(impactCount);
+            $('#sum-stat-dist-impact').text(impactDist.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+
+            // 3. Amount Route SYMC Complete
+            const completeData = data.filter(a => a.status === 'complete' || a.status === 'finish');
+            const completeCount = completeData.length;
+            const completeDist = sumDist(completeData);
+            
+            $('#sum-stat-complete').text(completeCount);
+            $('#sum-stat-dist-complete').text(completeDist.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+
+            // 4. Amount Route SYMC Ongoing
+            const ongoingData = data.filter(a => a.status === 'process');
+            const ongoingCount = ongoingData.length;
+            const ongoingDist = sumDist(ongoingData);
+            
+            $('#sum-stat-ongoing').text(ongoingCount);
+            $('#sum-stat-dist-ongoing').text(ongoingDist.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+
+            // --- Charts ---
+            // Chart 1: Job Type Distribution
+            const jobTypes = {};
+            data.forEach(a => { 
+                const t = a.jobType || 'Other';
+                jobTypes[t] = (jobTypes[t] || 0) + 1;
+            });
+
+            if(charts.sumJobType) charts.sumJobType.destroy();
+            const ctx1 = document.getElementById('chartSumJobType');
+            if(ctx1) {
+                charts.sumJobType = new Chart(ctx1, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(jobTypes),
+                        datasets: [{
+                            data: Object.values(jobTypes),
+                            backgroundColor: ['#f97316', '#3b82f6', '#8b5cf6', '#10b981', '#64748b']
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+                });
+            }
+
+            // Chart 2: Status Overview
+            const statuses = ['new', 'process', 'complete', 'cancel'];
+            const statusCounts = statuses.map(s => data.filter(a => a.status === s).length);
+            const statusLabels = ['New', 'Ongoing', 'Complete', 'Cancel'];
+
+            if(charts.sumStatus) charts.sumStatus.destroy();
+            const ctx2 = document.getElementById('chartSumStatus');
+            if(ctx2) {
+                charts.sumStatus = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: statusLabels,
+                        datasets: [{
+                            label: 'Jobs',
+                            data: statusCounts,
+                            backgroundColor: ['#3b82f6', '#eab308', '#22c55e', '#ef4444'],
+                            barThickness: 40
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
+                });
+            }
+        };
+
+        window.renderSubDashboardCharts = function() { 
+            const catFilter = $('#sub-filter-category').val();
+            const dateStart = $('#sub-date-start').val();
+            const dateEnd = $('#sub-date-end').val();
+            let data = assignments.filter(a => ['sub_preventive', 'sub_reroute', 'sub_reconfigure'].includes(a.category));
+            if(catFilter !== 'all') data = data.filter(a => a.category === catFilter);
+            if(dateStart) data = data.filter(a => new Date(a.actionDate) >= new Date(dateStart));
+            if(dateEnd) data = data.filter(a => new Date(a.actionDate) <= new Date(dateEnd));
+            $('#sub-stat-total').text(data.length);
+            const totalCost = data.reduce((sum, a) => sum + Number(a.expenses || 0), 0);
+            $('#sub-stat-cost').text(totalCost.toLocaleString() + ' ฿');
+            const activeSubs = [...new Set(data.map(a => a.subcontractor).filter(Boolean))];
+            $('#sub-stat-active').text(activeSubs.length);
+            const avgCost = data.length > 0 ? totalCost / data.length : 0;
+            $('#sub-stat-avg').text(Math.round(avgCost).toLocaleString() + ' ฿');
+            const expByStatus = {};
+            data.forEach(a => { const s = a.status || 'unknown'; expByStatus[s] = (expByStatus[s] || 0) + Number(a.expenses || 0); });
+            if(charts.subCostStatus) charts.subCostStatus.destroy();
+            const statusCanvas = document.getElementById('chartSubCostStatus');
+            if(statusCanvas) {
+                charts.subCostStatus = new Chart(statusCanvas, { type: 'doughnut', data: { labels: Object.keys(expByStatus), datasets: [{ label: 'Expenses', data: Object.values(expByStatus), backgroundColor: ['#3b82f6', '#22c55e', '#eab308', '#ef4444', '#a855f7'] }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } });
+            }
+            const subDataMap = {};
+            data.forEach(a => { const s = a.subcontractor || 'Unknown'; if(!subDataMap[s]) subDataMap[s] = { count: 0, cost: 0 }; subDataMap[s].count++; subDataMap[s].cost += Number(a.expenses || 0); });
+            const subLabels = Object.keys(subDataMap); const subCounts = subLabels.map(k => subDataMap[k].count); const subCosts = subLabels.map(k => subDataMap[k].cost);
+            if(charts.subCount) charts.subCount.destroy();
+            const countCanvas = document.getElementById('chartSubCount');
+            if(countCanvas) {
+                charts.subCount = new Chart(countCanvas, { type: 'bar', data: { labels: subLabels, datasets: [{ label: 'Job Count', data: subCounts, backgroundColor: '#3b82f6', xAxisID: 'x', }, { label: 'Total Cost (THB)', data: subCosts, backgroundColor: '#10b981', xAxisID: 'x1', }] }, options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', scales: { x: { type: 'linear', position: 'bottom', title: { display: true, text: 'Job Count' } }, x1: { type: 'linear', position: 'top', grid: { drawOnChartArea: false }, title: { display: true, text: 'Total Cost (THB)' }, ticks: { callback: function(value) { return value.toLocaleString(); } } } }, plugins: { tooltip: { callbacks: { label: function(context) { let label = context.dataset.label || ''; if (label) { label += ': '; } if (context.parsed.x !== null) { label += context.parsed.x.toLocaleString(); if(context.dataset.label.includes('Cost')) label += ' ฿'; } return label; } } } } } });
+            }
+            const tbody = $('#table-sub-summary'); tbody.empty(); const subAgg = {};
+            data.forEach(a => { const s = a.subcontractor || 'Unknown'; if(!subAgg[s]) subAgg[s] = { name: s, total: 0, finish: 0, cost: 0 }; subAgg[s].total++; if(a.status === 'finish' || a.status === 'complete') subAgg[s].finish++; subAgg[s].cost += Number(a.expenses || 0); });
+            Object.values(subAgg).forEach(row => { tbody.append(`<tr class="border-b border-gray-50 hover:bg-gray-50"><td class="p-3 font-medium text-gray-700">${row.name}</td><td class="p-3 text-center">${row.total}</td><td class="p-3 text-center text-green-600 font-bold">${row.finish}</td><td class="p-3 text-right text-brand-600 font-bold">${row.cost.toLocaleString()}</td></tr>`); });
+        };
+
+        window.updateDashboard = function() {
+             const data = assignments.filter(a => a.category === currentCategoryFilter);
+             
+             if(currentCategoryFilter === 'plan_interruption') {
+                 const counts = { new:0, process:0, complete:0, update_fms:0, cancel:0 };
+                 data.forEach(a => { const s = a.status || 'new'; if(counts[s] !== undefined) counts[s]++; });
+                 $('#plan-count-new').text(counts.new); $('#plan-count-process').text(counts.process); $('#plan-count-complete').text(counts.complete); $('#plan-count-updatefms').text(counts.update_fms); $('#plan-count-cancel').text(counts.cancel);
+             } else if(currentCategoryFilter === 'summary_plan') {
+                 // UPDATE SUMMARY PLAN JOB LIST DASHBOARD
+                 const counts = { new:0, process:0, complete:0, cancel:0 };
+                 data.forEach(a => { 
+                     let s = a.status || 'new';
+                     // Map finish to complete for this dashboard
+                     if(s === 'finish') s = 'complete'; 
+                     if(counts[s] !== undefined) counts[s]++; 
+                 });
+                 $('#sum-list-new').text(counts.new); 
+                 $('#sum-list-process').text(counts.process); 
+                 $('#sum-list-complete').text(counts.complete); 
+                 $('#sum-list-cancel').text(counts.cancel);
+             } else {
+                 // ... existing logic for other dashboards ...
+                 const counts = { new:0, process:0, assign:0, approve:0, finish:0, complete:0, cancel:0 };
+                 const costs = { new:0, process:0, assign:0, approve:0, finish:0, complete:0, cancel:0 };
+                 let grandTotal = 0;
+                 data.forEach(a => { const s = a.status || 'new'; if(counts[s] !== undefined) counts[s]++; const cost = Number(a.expenses || 0); if(costs[s] !== undefined) costs[s] += cost; grandTotal += cost; });
+                 if(menuConfig[currentCategoryFilter]?.isSub) {
+                    $('#sub-count-new').text(counts.new); $('#sub-cost-new').text(costs.new.toLocaleString() + ' ฿');
+                    $('#sub-count-process').text(counts.process); $('#sub-cost-process').text(costs.process.toLocaleString() + ' ฿');
+                    $('#sub-count-assign').text(counts.assign); $('#sub-cost-assign').text(costs.assign.toLocaleString() + ' ฿');
+                    $('#sub-count-approve').text(counts.approve); $('#sub-cost-approve').text(costs.approve.toLocaleString() + ' ฿');
+                    $('#sub-count-finish').text(counts.finish); $('#sub-cost-finish').text(costs.finish.toLocaleString() + ' ฿');
+                    $('#sub-count-cancel').text(counts.cancel); $('#sub-cost-cancel').text(costs.cancel.toLocaleString() + ' ฿');
+                    $('#table-grand-total').text('Total: ' + grandTotal.toLocaleString() + ' ฿').removeClass('hidden');
+                 } else {
+                    $('#table-grand-total').addClass('hidden');
+                    $('#team-count-new').text(counts.new); $('#team-count-process').text(counts.process); $('#team-count-complete').text(counts.finish + counts.complete); $('#team-count-cancel').text(counts.cancel);
+                 }
+             }
+        };

@@ -1,0 +1,194 @@
+        </div>
+    </main>
+
+    <!-- ASSIGNMENT MODAL -->
+    <div id="assignment-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-60 transition-opacity backdrop-blur-sm" onclick="closeModal()"></div>
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl w-full border border-gray-100">
+                <form id="assignment-form" onsubmit="return false;">
+                    <div class="bg-white px-8 py-6">
+                        <div class="flex justify-between items-center border-b border-gray-100 pb-4 mb-6"><h3 class="text-2xl font-bold text-gray-800 flex items-center" id="modal-title"><span class="bg-brand-100 text-brand-600 p-2 rounded-lg mr-3"><i class="fa-solid fa-pen-to-square"></i></span> บันทึกงานใหม่</h3><span id="display-internal-id" class="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-sm font-mono font-bold border border-gray-200">Auto ID</span></div>
+                        <input type="hidden" id="doc-id" name="docId"><input type="hidden" id="form-internal-id" name="internalId"><input type="hidden" id="form-category" name="category"><input type="hidden" id="form-file-url" name="fileUrl"><input type="hidden" id="form-file-name" name="fileName">
+                        
+                        <!-- แก้ไข HTML: ปรับปรุงส่วน Round Robin ให้รองรับ Special Job -->
+                        <div class="group-sub hidden mb-6">
+                            <div class="rr-box border border-orange-200 rounded-xl p-4 bg-orange-50 mb-6 shadow-sm relative">
+                                <!-- ส่วนแสดงผล Round Robin ปกติ -->
+                                <div id="rr-normal-view">
+                                    <div class="flex justify-between items-center">
+                                        <div>
+                                            <p class="rr-label text-gray-500 text-xs font-bold uppercase mb-1">ทีมก่อนหน้า (Previous)</p>
+                                            <div class="flex flex-col">
+                                                <p class="text-xl font-bold text-gray-400 mr-2" id="rr-prev-name">-</p>
+                                                <p class="text-xs text-gray-400 truncate max-w-[200px]" id="rr-prev-job">Job: -</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="rr-label text-brand-600 text-xs font-bold uppercase mb-1">ทีมที่ได้รับงานนี้ (Current)</p>
+                                            <p class="text-4xl font-extrabold text-brand-600" id="rr-next-name">-</p>
+                                            <div class="mt-3 flex justify-end gap-2" id="rr-action-buttons">
+                                                <button type="button" onclick="skipRoundRobin()" class="text-xs bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 px-3 py-1.5 rounded-lg shadow-sm transition"><i class="fa-solid fa-forward mr-1"></i> ข้าม (Skip)</button>
+                                                <button type="button" onclick="resetRoundRobin()" class="text-xs bg-white border border-red-200 hover:bg-red-50 text-red-600 px-3 py-1.5 rounded-lg shadow-sm transition"><i class="fa-solid fa-rotate-left mr-1"></i> เริ่มใหม่ (Reset)</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- ส่วนแสดงผลสำหรับ Special Job (เลือกเอง) -->
+                                <div id="rr-special-view" class="hidden">
+                                    <label class="block text-sm font-bold text-brand-700 mb-2 flex items-center">
+                                        <i class="fa-solid fa-star text-yellow-500 mr-2"></i> เลือกผู้รับเหมา (Special Job)
+                                    </label>
+                                    <select id="form-manual-sub" class="w-full border border-orange-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white" onchange="$('#form-sub-name').val(this.value)">
+                                        <option value="">เลือกผู้รับเหมา...</option>
+                                    </select>
+                                    <p class="text-xs text-gray-500 mt-2">* งาน Special Job จะไม่ถูกนำไปคำนวณในระบบวนคิว (Round Robin)</p>
+                                </div>
+
+                                <!-- Hidden Input เก็บค่าผู้รับเหมาจริงที่จะบันทึก -->
+                                <input type="hidden" id="form-sub-name">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                            <div class="plan-only hidden"><label>Interruption ID - CM</label><input type="text" id="form-interruption-id-cm" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                            <div class="plan-only hidden"><label>Project</label><select id="form-project" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"><option value="">เลือก Project...</option></select><input type="text" id="form-project-other" class="w-full border border-gray-300 rounded-lg p-2.5 mt-2 text-sm other-input" placeholder="ระบุอื่นๆ..."></div>
+                            <div><label>Job Type <span class="text-red-500">*</span></label><select id="form-job-type" name="jobType" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" required><option value="">เลือก...</option></select><input type="text" id="form-job-type-other" class="w-full border border-gray-300 rounded-lg p-2.5 mt-2 text-sm other-input" placeholder="ระบุอื่นๆ..."></div>
+                            <div class="col-span-1 md:col-span-2 summary-plan-hide"><label>Description <span class="text-red-500">*</span></label><input type="text" id="form-desc" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="รายละเอียดงาน"></div>
+                            <div class="summary-plan-hide">
+                                <label id="label-agency">Agency Inf. <span class="text-red-500">*</span></label>
+                                <select id="form-agency" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></select>
+                                <input type="text" id="form-agency-other" class="w-full border border-gray-300 rounded-lg p-2.5 mt-2 text-sm other-input" placeholder="ระบุอื่นๆ...">
+                            </div>
+                            
+                            <div class="not-plan-only summary-plan-hide"><label>Action Date <span class="text-red-500">*</span></label><input type="datetime-local" id="form-action-date" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                            
+                            <!-- Summary Plan Fields -->
+                            <div class="summary-plan-only hidden"><label>รหัสเส้นทาง (Route Code)</label><input type="text" id="form-route-code" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="ใส่หรือไม่ใส่ก็ได้"></div>
+                            <div class="summary-plan-only hidden"><label>ไฟฟ้าเขต (Electric District)</label><input type="text" id="form-route-code" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                            <div class="summary-plan-only hidden col-span-1 md:col-span-2"><label>ชื่อเส้นทาง (Route Name)</label><input type="text" id="form-route-name" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                            <div class="summary-plan-only hidden"><label>จำนวนฝั่ง (Side Count)</label><select id="form-side-count" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"><option value="">เลือก...</option></select></div>
+                            <div class="summary-plan-only hidden"><label>จุดเริ่ม GPS (Start GPS)</label><input type="text" id="form-gps-start" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="ใส่หรือไม่ใส่ก็ได้"></div>
+                            <div class="summary-plan-only hidden"><label>จุดสิ้นสุด GPS (End GPS)</label><input type="text" id="form-gps-end" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="ใส่หรือไม่ใส่ก็ได้"></div>
+                            <div class="summary-plan-only hidden"><label>ระยะทาง (กม.)</label><input type="number" step="0.01" id="form-distance" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                            <div class="summary-plan-only hidden"><label>OWNER (บริษัทที่รับผิดชอบ)</label><input type="text" id="form-owner" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                            <div class="summary-plan-only hidden col-span-1 md:col-span-2"><label>ข้อกำหนดแนวข้าม (Cross Req)</label><input type="text" id="form-cross-req" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="ใส่หรือไม่ใส่ก็ได้"></div>
+                            <div class="summary-plan-only hidden"><label>Due Date (วันตัดสาย)</label><input type="date" id="form-due-date-summary" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+
+                            <div class="plan-only hidden"><label>Action Date (วันที่ปฏิบัติงาน)</label><input type="date" id="form-plan-date" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                            <div class="plan-only hidden grid grid-cols-2 gap-2">
+                                <div><label>Start Time</label><input type="time" id="form-plan-start" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                                <div><label>End Time</label><input type="time" id="form-plan-end" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                            </div>
+                            <div class="plan-only hidden"><label>Sent Plan Date (วันที่ส่งแผน)</label><input type="date" id="form-sent-plan-date" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                            <div class="plan-only hidden col-span-1 md:col-span-2"><label>Unplanned Impact</label><input type="text" id="form-unplanned-impact" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="ระบุผลกระทบ..."></div>
+                            
+                            <div class="plan-only hidden"><label>Interruption Item (ลูกค้าที่กระทบ)</label><input type="number" id="form-interruption-item" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" min="0" placeholder="0"></div>
+                            <div class="team-only"><label>Due Date</label><input type="date" id="form-due-date" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                            <div class="group-sub hidden"><label>Due Date</label><input type="date" id="form-due-date-sub" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                            <div class="team-only hidden plan-only hidden"><label>Team Request</label><select id="form-team-req" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></select><input type="text" id="form-team-req-other" class="w-full border border-gray-300 rounded-lg p-2.5 mt-2 text-sm other-input" placeholder="ระบุทีมอื่นๆ..."></div>
+                            <div class="team-only hidden"><label>Req Person</label><input type="number" id="form-req-person" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" min="1" value="1"></div>
+                            <div class="team-only hidden"><label>Ref Job ID</label><input type="text" id="form-ref-job-id" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                            <div class="group-sub hidden"><label>รายละเอียดราคา (Objective)</label><input type="text" id="form-objective" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                            <div class="group-sub hidden"><label>ราคาประมาณการ (Expenses)</label><input type="number" id="form-expenses" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                            <div class="group-sub hidden"><label>Route Code</label><input type="text" id="form-route-code-sub" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                            <div class="col-span-1 md:col-span-2 summary-plan-hide"><label>Location / Road</label><input type="text" id="form-location" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                            
+                            <!-- Summary Plan Region Section Header & Fields -->
+                            <div class="summary-plan-only hidden col-span-full border-t border-gray-200 pt-4 mt-2"><h4 class="font-bold text-gray-700 text-sm mb-2">// ส่วนของ Region ลงข้อมูล //</h4></div>
+                            <div class="summary-plan-only hidden">
+                                <label>Sym Impact</label>
+                                <select id="form-sym-impact" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm">
+                                    <option value="">เลือก...</option>
+                                    <option value="Impact">Impact</option>
+                                    <option value="Non Impact">Non Impact</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                                <input type="text" id="form-sym-impact-other" class="w-full border border-gray-300 rounded-lg p-2.5 mt-2 text-sm other-input" placeholder="ระบุเพิ่มเติม...">
+                            </div>
+
+                            <div class="row-span-2"><label>NS Respond (ผู้รับผิดชอบ)</label><select id="form-ns-respond" class="select2 w-full border border-gray-300 rounded-lg p-2.5 text-sm" multiple="multiple" style="width: 100%;"></select></div>
+                            <div class="col-span-1 md:col-span-2 not-plan-only summary-plan-hide"><label>GPS (Multi-line)</label><textarea id="form-gps" rows="3" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="วางพิกัดได้หลายบรรทัด"></textarea><button type="button" onclick="getLocation()" class="text-brand-500 text-xs mt-1 hover:underline"><i class="fa-solid fa-location-crosshairs"></i> Get Location</button></div>
+                            <div class="col-span-1 md:col-span-2 summary-plan-hide"><label>Remark</label><input type="text" id="form-remark" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                            
+                            <div class="col-span-1 md:col-span-3 not-plan-only summary-plan-hide"><label>Image/File แนบรูปหรือไฟล์</label><div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-brand-50 hover:border-brand-300 cursor-pointer relative bg-gray-50 transition group"><input type="file" id="form-file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"><div class="flex flex-col items-center"><i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 group-hover:text-brand-500 mb-2 transition"></i><p class="text-sm text-gray-600 font-medium" id="file-name-display">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</p></div></div><div id="existing-file-link" class="mt-2 text-xs text-brand-600 hidden font-medium flex items-center"><i class="fa-solid fa-paperclip mr-1"></i> <a href="#" target="_blank" class="hover:underline">ดูไฟล์เดิม</a></div></div>
+                            
+                            <!-- Actions Copy for Summary Plan -->
+                            <div id="summary-copy-actions" class="hidden col-span-full flex gap-2 justify-end">
+                                <!-- ... placeholder for future actions ... -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-8 py-5 sm:flex sm:flex-row-reverse border-t border-gray-100">
+                        <button type="button" onclick="performSave()" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-6 py-2.5 bg-brand-600 text-base font-medium text-white hover:bg-brand-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm transition"><i class="fa-solid fa-save mr-2 mt-0.5"></i> บันทึกข้อมูล</button>
+                        <button type="button" onclick="closeModal()" class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-6 py-2.5 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition">ยกเลิก</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+       // === GLOBAL SETUP ===
+       const firebaseConfig = {
+			   apiKey: "AIzaSyBY0ZewKLp8MJbkq2xxcQ2Z_cz7p04e0EY",
+			   authDomain: "assignment-interruption-final.firebaseapp.com",
+			   projectId: "assignment-interruption-final",
+			   storageBucket: "assignment-interruption-final.firebasestorage.app",
+			   messagingSenderId: "578868197362",
+			   appId: "1:578868197362:web:09649a591443922fe69d6b"
+				};
+				
+		const appId = 'assignment-app'; 
+		
+        let auth, db; 
+        try { 
+            firebase.initializeApp(firebaseConfig); 
+            auth = firebase.auth(); 
+            db = firebase.firestore(); 
+        } catch (e) { 
+            console.error("Firebase Init Error:", e); 
+        }
+        
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbx5KFStUdu_gJ-FmB99YluYydM6ObImyUqrF2vGh6DO1gCAK5JWIxz5AGG40B_iViiULQ/exec";
+
+        let assignments = [];
+        let masterData = {};
+        let currentView = 'calendar';
+        let currentCategoryFilter = 'all';
+        let rrState = { next: null, prev: null };
+        let currentPage = 1;
+        let rowsPerPage = 10;
+        let filteredData = [];
+        let charts = {}; // <--- Adding this
+        
+        // Calendar State
+        let currentCalendarDate = new Date();
+        let calendarViewMode = 'month'; // 'month', 'week', 'day'
+        let currentMonth = new Date().getMonth(); // Legacy support if needed
+        let currentYear = new Date().getFullYear(); // Legacy support if needed
+
+        const CONST_DATA = { 
+            projects: [ "MEA", "PEA", "NBTC", "Sky Train", "Bangkok Metropolis", "BTS", "MRT", "NT", "Customer", "Department Of Highways", "Department Of Rural Road", "Landlord", "Local Authorty", "Motorway", "State Railway OF Thailand", "Underground", "MOI", "Noah", "DWDM", "OLT and ONU", "Site Relocation", "Fiber Infra Sharing", "Improvement", "Migration","Other" ], 
+            agencies: [ "MEA", "PEA", "NBTC", "Sky Train", "NPD", "SQM", "Region", "NOC", "SQI", "ROW", "Landlord", "TPD", "Customer", "Bangkok Metropolis", "BTS", "MRT", "NT", "Motorway", "Department Of Highways", "Department Of Rural Road", "Other" ],
+            teamRequests: [ "NOC", "HelpDesk", "TPD", "NPD", "SQM", "SQI", "Sale", "Region BKK", "Cores Network", "Landlord", "SDM", "Region Provincial", "ROW", "Other" ], 
+            sideCounts: ["1 ฝั่ง", "2 ฝั่ง"],
+            jobTypes: { 
+                team: ["Improvement", "Create Route", "Meeting", "Team Daily", "Support", "Other"], 
+                plan: ["Interruption OFC", "Interruption Equipment", "Information", "Other"], 
+                summary_plan: ["MEA", "PEA","MOI","Sky Trai","Bangkok Metropolis","Department Of Highways","Landlord","Underground","Fiber Infra Sharing", "Other"],
+                // แก้ไข: เพิ่ม "Special Job" ในรายการ
+                preventive: ["Preventive มัดรวบสาย", "Preventive ย้ายแนวสาย", "Preventive เข้าคอนใหม่", "Preventive ติดสติ๊กเกอร์", "Preventive รื้อถอนสายตาย", "Preventive Stand by", "Preventive ทำความสะอาดSite","Preventive งานร้องเรียน", "Special Job", "Other"], 
+                reroute: ["Reroute Project", "Underground", "MOI", "Reconfig for Reroute", "Special Job", "Other"], 
+                reconfigure: ["Reconfig high loss", "Reconfig New Route","Cancle OFC","Special Job", "Other"] 
+            } 
+        };
+        const menuConfig = { 'plan_interruption': { title: 'Interruption Plan', isSub: false, isPlan: true, prefix: 'IP', jobTypeKey: 'plan', sheetName: 'Interruption Plan' }, 'summary_plan': { title: 'Project Plan', isSub: false, isPlan: true, prefix: 'Sum', jobTypeKey: 'summary_plan', sheetName: 'Summary Plan' }, 'team': { title: 'Assignment Interruption Team', isSub: false, prefix: 'AI', jobTypeKey: 'team', sheetName: 'Interruption Team' }, 'sub_preventive': { title: 'Assignment Preventive', isSub: true, prefix: 'PVT', jobTypeKey: 'preventive', sheetName: 'Assignment Preventive' }, 'sub_reroute': { title: 'Assignment Reroute', isSub: true, prefix: 'RER', jobTypeKey: 'reroute', sheetName: 'Assignment Reroute' }, 'sub_reconfigure': { title: 'Assignment Reconfigure & Cancel', isSub: true, prefix: 'REF', jobTypeKey: 'reconfigure', sheetName: 'Assignment Reconfigure' }, 'dashboard_analytics': { title: 'Dashboard Analytics', isSub: false, isPlan: false, prefix: 'DB', jobTypeKey: 'team' }, 'sub_dashboard': { title: 'Dashboard Subcontractor', isSub: false, isPlan: false, prefix: 'DBS', jobTypeKey: 'preventive' } };
+
+        function getAssignmentsRef() { return db ? db.collection('assignments') : null; }
+        function getSettingsRef() { return db ? db.collection('settings').doc('masterData') : null; }
+        
+        function fmtDate(s, d) { if(!s) return '-'; let dt; if(s.seconds) dt = new Date(s.seconds*1000); else dt=new Date(s); if(isNaN(dt.getTime())) return '-'; const day=dt.getDate(), m=dt.getMonth()+1, y=dt.getFullYear()+543, h=String(dt.getHours()).padStart(2,'0'), mn=String(dt.getMinutes()).padStart(2,'0'); return d ? `${day}/${m}/${y}` : `${day}/${m}/${y} ${h}:${mn}`; }
+        function extractNS(d) { const a=Array.isArray(d)?d:(d?[d]:[]); const names=[], phones=[]; a.forEach(s=>{ if(s.includes(' - ')){ const p=s.split(' - '); names.push(p[0]); phones.push(p[1]); } else { names.push(s); } }); return {names:names.join(', '), phones:phones.join(', ') || '-'}; }
+        function extractGPS(g) { const lines = (g||'').split('\n'); return {start: lines[0]||'-', end: lines[1]||'-'}; }
