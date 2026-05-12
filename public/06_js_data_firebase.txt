@@ -268,10 +268,10 @@
                     scopes: ["User.Read"],
                     prompt: "select_account"
                 };
-                const response = await msalInstance.loginPopup(loginRequest);
-                if (response && response.account) {
-                    processLoginSuccess(response.account);
-                }
+                
+                // Fallback to loginRedirect to bypass browser popup blockers 
+                // (especially effective in Mobile Safari/LINE forms).
+                msalInstance.loginRedirect(loginRequest);
             } catch (error) {
                 console.error("Login Error:", error);
                 if (error.errorCode === "user_cancelled") {
@@ -290,15 +290,13 @@
                 } else {
                     $('#login-error').removeClass('hidden').text('Error: ' + error.message);
                 }
-            } finally {
                 isLoginInProgress = false;
-            }
+            } 
         };
 
         window.signOutAzure = async function() {
             try {
-                await msalInstance.logoutPopup();
-                location.reload();
+                await msalInstance.logoutRedirect();
             } catch (error) {
                 console.error(error);
             }
