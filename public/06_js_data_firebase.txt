@@ -144,8 +144,12 @@
 			
 			// --- NEW: Add Action Buttons to Popup ---
             const actionButtons = window.getActionButtons(item, isSub, isPlan);
-            const editButton = `<button onclick="Swal.close(); openModal('${item.id}')" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition shadow-sm"><i class="fa-solid fa-pen-to-square mr-1"></i> แก้ไข (Edit)</button>`;
+            let editButton = `<button onclick="Swal.close(); openModal('${item.id}')" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition shadow-sm"><i class="fa-solid fa-pen-to-square mr-1"></i> แก้ไข (Edit)</button>`;
             
+            if (!window.isAdmin) {
+                editButton = '';
+            }
+
             // เพิ่มตัวแปรสำหรับปุ่มพิเศษ (แสดงเฉพาะหมวด sub_preventive)
             let extraButtons = '';
             if (item.category === 'sub_preventive') {
@@ -269,9 +273,15 @@
                     prompt: "select_account"
                 };
                 
-                // Fallback to loginRedirect to bypass browser popup blockers 
-                // (especially effective in Mobile Safari/LINE forms).
-                msalInstance.loginRedirect(loginRequest);
+                const inIframe = window !== window.parent && !window.opener;
+                if (inIframe) {
+                    const response = await msalInstance.loginPopup(loginRequest);
+                    if (response && response.account) {
+                        processLoginSuccess(response.account);
+                    }
+                } else {
+                    msalInstance.loginRedirect(loginRequest);
+                }
             } catch (error) {
                 console.error("Login Error:", error);
                 if (error.errorCode === "user_cancelled") {
@@ -296,16 +306,45 @@
 
         window.signOutAzure = async function() {
             try {
-                await msalInstance.logoutRedirect();
+                const inIframe = window !== window.parent && !window.opener;
+                if (inIframe) {
+                    await msalInstance.logoutPopup();
+                    location.reload();
+                } else {
+                    await msalInstance.logoutRedirect();
+                }
             } catch (error) {
                 console.error(error);
             }
         };
 
+        window.userRoles = [];
+        window.isAdmin = false;
+
         function processLoginSuccess(account) {
             $('#azure-login-overlay').fadeOut();
             $('#main-app-content').removeClass('opacity-0 pointer-events-none').addClass('opacity-100');
             $('#status-text').text(account.username).parent().addClass('bg-green-100 text-green-700'); 
+            
+            // Extract roles from token claims
+            if (account.idTokenClaims && account.idTokenClaims.roles) {
+                window.userRoles = account.idTokenClaims.roles;
+            }
+            window.isAdmin = window.userRoles.includes('Admin');
+            
+            // Adjust UI based on roles (if not admin, hide add/action buttons)
+            if (!window.isAdmin) {
+                $('#btn-add-new-job').hide();
+                $('#btn-clear-database').hide();
+                $('#nav-item-setting').hide();
+                $('#btn-save-link').hide();
+            } else {
+                $('#btn-add-new-job').show();
+                $('#btn-clear-database').show();
+                $('#nav-item-setting').show();
+                $('#btn-save-link').show();
+            }
+
             initApp();
         }
 

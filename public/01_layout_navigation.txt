@@ -216,7 +216,7 @@
             </div>
             
             <!-- Setting Menu -->
-            <a href="#" onclick="switchView('setting')" class="nav-item flex items-center p-3 rounded-lg text-gray-700 hover:bg-brand-50 hover:text-brand-600 transition-all group" data-view="setting">
+            <a href="#" id="nav-item-setting" onclick="switchView('setting')" class="nav-item flex items-center p-3 rounded-lg text-gray-700 hover:bg-brand-50 hover:text-brand-600 transition-all group" data-view="setting">
                 <div class="w-8 flex justify-center flex-shrink-0"><i class="fa-solid fa-gear text-lg group-hover:text-brand-500"></i></div><span class="ml-3">Setting</span>
             </a>
 

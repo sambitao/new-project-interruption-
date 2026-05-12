@@ -146,7 +146,11 @@
                     
                     let m = `<button onclick="viewDetail('${item.id}')" class="text-gray-400 hover:text-green-600 mx-1"><i class="fa-solid fa-file-lines"></i></button>`;
                     if(config && config.isSub) m += `<button onclick="requestApprove('${item.id}')" class="text-gray-400 hover:text-purple-600 mx-1"><i class="fa-solid fa-money-bill-wave"></i></button>`;
-                    m += `<button onclick="openModal('${item.id}')" class="text-gray-400 hover:text-blue-600 mx-1"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteAssignment('${item.id}')" class="text-gray-400 hover:text-red-600 mx-1"><i class="fa-solid fa-trash-can"></i></button>`;
+                    
+                    if (window.isAdmin) {
+                        m += `<button onclick="openModal('${item.id}')" class="text-gray-400 hover:text-blue-600 mx-1"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteAssignment('${item.id}')" class="text-gray-400 hover:text-red-600 mx-1"><i class="fa-solid fa-trash-can"></i></button>`;
+                    }
+                    
                     if(item.fileUrl && !(config && config.isPlan)) m+= `<a href="${item.fileUrl}" target="_blank" class="text-gray-400 hover:text-blue-500 mx-1"><i class="fa-solid fa-cloud-arrow-down"></i></a>`;
                     rowHtml += `<td class="p-3 text-center"><div class="flex items-center justify-center space-x-2"><div class="flex gap-1">${acts}</div><div class="h-4 w-px bg-gray-200"></div><div class="flex">${m}</div></div></td>`;
                     tbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-gray-50 border-b border-gray-50">${rowHtml}</tr>`);
@@ -157,7 +161,8 @@
         };
 
         window.getActionButtons = function(item, isSub, isPlan) {
-		
+            if (!window.isAdmin) return '-';
+            
             // FIX: Check item.category for robustness in Calendar view
             if (item.category === 'summary_plan' || currentCategoryFilter === 'summary_plan') {
                 if (item.status === 'new') {
