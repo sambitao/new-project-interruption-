@@ -147,8 +147,11 @@
                     let m = `<button onclick="viewDetail('${item.id}')" class="text-gray-400 hover:text-green-600 mx-1"><i class="fa-solid fa-file-lines"></i></button>`;
                     if(config && config.isSub) m += `<button onclick="requestApprove('${item.id}')" class="text-gray-400 hover:text-purple-600 mx-1"><i class="fa-solid fa-money-bill-wave"></i></button>`;
                     
-                    if (window.isAdmin) {
-                        m += `<button onclick="openModal('${item.id}')" class="text-gray-400 hover:text-blue-600 mx-1"><i class="fa-solid fa-pen-to-square"></i></button><button onclick="deleteAssignment('${item.id}')" class="text-gray-400 hover:text-red-600 mx-1"><i class="fa-solid fa-trash-can"></i></button>`;
+                    if (window.hasPermission('edit_job')) {
+                        m += `<button onclick="openModal('${item.id}')" class="text-gray-400 hover:text-blue-600 mx-1"><i class="fa-solid fa-pen-to-square"></i></button>`;
+                    }
+                    if (window.hasPermission('delete_job')) {
+                        m += `<button onclick="deleteAssignment('${item.id}')" class="text-gray-400 hover:text-red-600 mx-1"><i class="fa-solid fa-trash-can"></i></button>`;
                     }
                     
                     if(item.fileUrl && !(config && config.isPlan)) m+= `<a href="${item.fileUrl}" target="_blank" class="text-gray-400 hover:text-blue-500 mx-1"><i class="fa-solid fa-cloud-arrow-down"></i></a>`;
@@ -161,7 +164,7 @@
         };
 
         window.getActionButtons = function(item, isSub, isPlan) {
-            if (!window.isAdmin) return '-';
+            if (!window.hasPermission('action_job')) return '-';
             
             // FIX: Check item.category for robustness in Calendar view
             if (item.category === 'summary_plan' || currentCategoryFilter === 'summary_plan') {

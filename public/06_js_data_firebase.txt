@@ -146,7 +146,7 @@
             const actionButtons = window.getActionButtons(item, isSub, isPlan);
             let editButton = `<button onclick="Swal.close(); openModal('${item.id}')" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition shadow-sm"><i class="fa-solid fa-pen-to-square mr-1"></i> แก้ไข (Edit)</button>`;
             
-            if (!window.isAdmin) {
+            if (!window.hasPermission('edit_job')) {
                 editButton = '';
             }
 
@@ -320,6 +320,194 @@
 
         window.userRoles = [];
         window.isAdmin = false;
+        
+        window.availableMenus = [
+            { id: 'dashboard_analytics', label: 'Dashboard Main' },
+            { id: 'calendar', label: 'Calendar' },
+            { id: 'plan_interruption', label: 'Interruption Plan' },
+            { id: 'summary_menu', label: 'Project Plan (Menu)' },
+            { id: 'summary_plan', label: 'Summary Plan (List)' },
+            { id: 'summary_dashboard', label: 'Dashboard Project' },
+            { id: 'team', label: 'Interruption Team' },
+            { id: 'subcontractor_menu', label: 'Subcontractor (Menu)' },
+            { id: 'sub_dashboard', label: 'Dashboard & Cost' },
+            { id: 'sub_preventive', label: 'Sub Preventive' },
+            { id: 'sub_reroute', label: 'Sub Reroute' },
+            { id: 'sub_reconfigure', label: 'Sub Reconfigure & Cancel' },
+            { id: 'setting', label: 'Setting (Master & Roles)' },
+            { id: 'link_support', label: 'Link Support' }
+        ];
+
+        window.availableActions = [
+            { id: 'add_job', label: 'เพิ่มงาน (Add Job)' },
+            { id: 'edit_job', label: 'แก้ไข (Edit Job)' },
+            { id: 'delete_job', label: 'ลบงาน (Delete Job)' },
+            { id: 'action_job', label: 'ดำเนินการ (Receive, Finish, etc.)' },
+            { id: 'clear_database', label: 'Reset Database (Setting)' }
+        ];
+
+        window.hasPermission = function(requiredKey, type = 'action') {
+            if (window.userRoles.includes('Admin')) return true; // Admin gets everything
+            
+            // Check customized roles
+            if (masterData && masterData.rolePermissions) {
+                for (let r of window.userRoles) {
+                    const roleCfg = masterData.rolePermissions[r];
+                    if (roleCfg) {
+                        if (type === 'menu' && roleCfg.menus && roleCfg.menus.includes(requiredKey)) return true;
+                        if (type === 'action' && roleCfg.actions && roleCfg.actions.includes(requiredKey)) return true;
+                    }
+                }
+            }
+            return false;
+        };
+
+        window.applyRolePermissions = function() {
+            // Apply Menus Visibility
+            window.availableMenus.forEach(menu => {
+                const hasMenuPerm = window.hasPermission(menu.id, 'menu');
+                // For sub-menus or items with data-view
+                if (menu.id.endsWith('_menu')) {
+                    const elId = menu.id.replace('_menu', '-menu');
+                    const btn = $(`#${elId}`).prev('button'); 
+                    if (hasMenuPerm) {
+                        btn.show();
+                        // Optional: don't auto show the div, let the toggle handle it
+                    } else {
+                        btn.hide();
+                        $(`#${elId}`).hide(); // also hide the submenu container
+                    }
+                } else {
+                    const el = $(`[data-view="${menu.id}"]`);
+                    // Specifically hide parent if it's sub_dashboard (and others) but not affecting siblings if they don't have to.
+                    if (hasMenuPerm) el.show(); else el.hide();
+                }
+            });
+
+            // Adjust UI Action Buttons based on roles
+            if (!window.hasPermission('add_job')) {
+                $('#btn-add-new-job').hide();
+                $('#btn-save-link').hide(); // In Link Support, same concept
+            } else {
+                $('#btn-add-new-job').show();
+                $('#btn-save-link').show();
+            }
+
+            if (!window.hasPermission('clear_database')) {
+                $('#btn-clear-database').hide();
+            } else {
+                $('#btn-clear-database').show();
+            }
+            
+            // Render Role Settings UI if existing
+            if ($('#role-permissions-container').length > 0) renderRolePermissionsUI();
+        };
+
+        window.renderRolePermissionsUI = function() {
+            const container = $('#role-permissions-container');
+            container.empty();
+
+            const rolesConfig = (masterData && masterData.rolePermissions) ? masterData.rolePermissions : {};
+            
+            // Collect all roles from config, plus always show Admin
+            let rolesToRender = Object.keys(rolesConfig);
+            if (!rolesToRender.includes('Admin')) rolesToRender.push('Admin');
+
+            rolesToRender.forEach(roleName => {
+                const cfg = rolesConfig[roleName] || { menus: [], actions: [] };
+                const isAdmin = roleName === 'Admin';
+                
+                let html = `<div class="p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                    <div class="flex justify-between items-center mb-3">
+                        <h5 class="font-bold text-gray-800"><i class="fa-solid fa-user text-indigo-400 mr-2"></i> Role: <span class="text-indigo-600">${roleName}</span></h5>
+                        ${isAdmin ? '<span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded shadow-sm">All Access (Fixed)</span>' : `<button onclick="deleteRoleConfig('${roleName}')" class="text-red-500 hover:text-red-600 text-sm"><i class="fa-solid fa-trash-can mr-1"></i> ลบ</button>`}
+                    </div>`;
+                
+                // Menus
+                html += `<div class="mb-3"><div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Menus (การเข้าถึงเมนู)</div><div class="flex flex-wrap gap-2">`;
+                window.availableMenus.forEach(menu => {
+                    const checked = (isAdmin || (cfg.menus && cfg.menus.includes(menu.id))) ? 'checked' : '';
+                    const disabled = isAdmin ? 'disabled' : '';
+                    html += `<label class="inline-flex items-center bg-white border border-gray-200 px-2 py-1 rounded text-xs cursor-pointer hover:bg-gray-50">
+                        <input type="checkbox" class="role-checkbox mr-1.5 focus:ring-indigo-500 rounded text-indigo-600" data-role="${roleName}" data-type="menus" value="${menu.id}" ${checked} ${disabled} onchange="updateRoleConfig('${roleName}')"> ${menu.label}
+                    </label>`;
+                });
+                html += `</div></div>`;
+
+                // Actions
+                html += `<div><div class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Actions (การกดปุ่มต่างๆ)</div><div class="flex flex-wrap gap-2">`;
+                window.availableActions.forEach(action => {
+                    const checked = (isAdmin || (cfg.actions && cfg.actions.includes(action.id))) ? 'checked' : '';
+                    const disabled = isAdmin ? 'disabled' : '';
+                    html += `<label class="inline-flex items-center bg-white border border-gray-200 px-2 py-1 rounded text-xs cursor-pointer hover:bg-gray-50">
+                        <input type="checkbox" class="role-checkbox mr-1.5 focus:ring-indigo-500 rounded text-indigo-600" data-role="${roleName}" data-type="actions" value="${action.id}" ${checked} ${disabled} onchange="updateRoleConfig('${roleName}')"> ${action.label}
+                    </label>`;
+                });
+                html += `</div></div></div>`;
+
+                container.append(html);
+            });
+        };
+
+        window.addNewRoleConfig = function() {
+            const newRole = $('#new-role-name').val().trim();
+            if (!newRole) return Swal.fire('Error', 'กรุณาระบุชื่อ Role', 'error');
+            if (newRole === 'Admin') return Swal.fire('Error', 'ไม่สามารถสร้าง Role Admin ซ้ำได้', 'error');
+            
+            if (!masterData.rolePermissions) masterData.rolePermissions = {};
+            if (masterData.rolePermissions[newRole]) return Swal.fire('Error', 'Role นี้มีอยู่แล้ว', 'error');
+
+            masterData.rolePermissions[newRole] = { menus: [], actions: [] };
+            $('#new-role-name').val('');
+            saveMasterDataSettings('เพิ่ม Role สำเร็จ');
+        };
+
+        window.deleteRoleConfig = function(roleName) {
+            Swal.fire({
+                title: 'ยืนยันการลบ Role',
+                text: `คุณต้องการลบสิทธิ์ของ ${roleName} ใช่หรือไม่?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    delete masterData.rolePermissions[roleName];
+                    saveMasterDataSettings('ลบ Role สำเร็จ');
+                }
+            });
+        };
+
+        window.updateRoleConfig = function(roleName) {
+            if (roleName === 'Admin') return; // Admin is fixed
+            const roleCfg = { menus: [], actions: [] };
+            
+            $(`input.role-checkbox[data-role="${roleName}"]:checked`).each(function() {
+                const type = $(this).data('type');
+                const val = $(this).val();
+                roleCfg[type].push(val);
+            });
+
+            if (!masterData.rolePermissions) masterData.rolePermissions = {};
+            masterData.rolePermissions[roleName] = roleCfg;
+            
+            // Only update local state, wait for user to click save
+            window.applyRolePermissions();
+        };
+
+        window.saveAllRolesConfig = function() {
+            saveMasterDataSettings('บันทึกสิทธิ์การใช้งานสำเร็จ');
+        };
+
+        async function saveMasterDataSettings(successMsg) {
+            try {
+                await supabaseClient.from('master_settings').upsert({ id: 'masterData', data: masterData });
+                window.applyRolePermissions();
+                if (successMsg) Swal.fire({ icon: 'success', title: successMsg, toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 });
+            } catch (error) {
+                console.error("Save masterData Error:", error);
+                Swal.fire('Error', 'เกิดข้อผิดพลาด: ' + error.message, 'error');
+            }
+        }
 
         function processLoginSuccess(account) {
             $('#azure-login-overlay').fadeOut();
@@ -331,19 +519,6 @@
                 window.userRoles = account.idTokenClaims.roles;
             }
             window.isAdmin = window.userRoles.includes('Admin');
-            
-            // Adjust UI based on roles (if not admin, hide add/action buttons)
-            if (!window.isAdmin) {
-                $('#btn-add-new-job').hide();
-                $('#btn-clear-database').hide();
-                $('#nav-item-setting').hide();
-                $('#btn-save-link').hide();
-            } else {
-                $('#btn-add-new-job').show();
-                $('#btn-clear-database').show();
-                $('#nav-item-setting').show();
-                $('#btn-save-link').show();
-            }
 
             initApp();
         }
@@ -377,7 +552,9 @@
                     if (error && error.code !== 'PGRST116') { console.error("Load Settings Error:", error); return; }
                     if (data && data.data) {
                         masterData = data.data;
+                        if (!masterData.rolePermissions) masterData.rolePermissions = {}; // Make sure it exists
                         window.renderDropdowns(); 
+                        window.applyRolePermissions();
                         if (currentView === 'setting') window.renderSettings(); 
                     } else {
                         if (typeof initializeDatabaseMaster === 'function') initializeDatabaseMaster(false);
