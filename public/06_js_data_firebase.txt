@@ -10,6 +10,45 @@
             const html = `<div class="text-left font-prompt text-sm space-y-2 select-text"><div class="text-center font-bold text-xl text-gray-800 mb-4 border-b pb-3 border-gray-200"><i class="fa-solid fa-file-invoice-dollar text-yellow-500 mr-2"></i> รายการอนุมัติค่าใช้จ่าย</div><div class="grid grid-cols-12 gap-2 items-center"><div class="col-span-1 text-center text-gray-400"><i class="fa-solid fa-id-card"></i></div><div class="col-span-4 font-bold text-gray-600">Job ID :</div><div class="col-span-7 font-mono font-bold text-gray-800">${item.internalId}</div></div><div class="grid grid-cols-12 gap-2 items-center"><div class="col-span-1 text-center text-gray-400"><i class="fa-solid fa-helmet-safety"></i></div><div class="col-span-4 font-bold text-gray-600">ผู้รับเหมา :</div><div class="col-span-7"><span class="border-2 border-red-500 text-red-600 font-bold px-2 py-0.5 rounded bg-red-50 inline-block shadow-sm">${item.subcontractor || '-'}</span></div></div><div class="grid grid-cols-12 gap-2 items-start"><div class="col-span-1 text-center text-gray-400 mt-1"><i class="fa-solid fa-tools"></i></div><div class="col-span-4 font-bold text-gray-600 mt-1">ประเภทงาน :</div><div class="col-span-7">${item.jobType}</div></div><div class="grid grid-cols-12 gap-2 items-start"><div class="col-span-1 text-center text-gray-400 mt-1"><i class="fa-solid fa-comment-alt"></i></div><div class="col-span-4 font-bold text-gray-600 mt-1">ชื่องาน :</div><div class="col-span-7">${item.description}</div></div><div class="grid grid-cols-12 gap-2 items-start"><div class="col-span-1 text-center text-gray-400 mt-1"><i class="fa-solid fa-building"></i></div><div class="col-span-4 font-bold text-gray-600 mt-1">หน่วยงานแจ้ง :</div><div class="col-span-7">${item.agency || '-'}</div></div><div class="grid grid-cols-12 gap-2 items-center"><div class="col-span-1 text-center text-gray-400"><i class="fa-solid fa-route"></i></div><div class="col-span-4 font-bold text-gray-600">Code :</div><div class="col-span-7 font-mono">${item.routeCode || '-'}</div></div><div class="grid grid-cols-12 gap-2 items-center bg-yellow-50 p-1.5 rounded-lg -mx-2"><div class="col-span-1 text-center text-gray-400"><i class="fa-solid fa-coins text-yellow-600"></i></div><div class="col-span-4 font-bold text-gray-600">ประมาณราคา :</div><div class="col-span-7"><span class="border-2 border-red-500 text-red-600 font-bold px-2 py-0.5 rounded bg-white inline-block shadow-sm">${(item.expenses || '0').toLocaleString()} ฿</span></div></div><div class="grid grid-cols-12 gap-2 items-center"><div class="col-span-1 text-center text-gray-400"><i class="fa-solid fa-calendar-day"></i></div><div class="col-span-4 font-bold text-gray-600">วันดำเนินการ :</div><div class="col-span-7 text-blue-600 font-medium">${actionDateStr}</div></div><div class="grid grid-cols-12 gap-2 items-start"><div class="col-span-1 text-center text-gray-400 mt-1"><i class="fa-solid fa-user-tie"></i></div><div class="col-span-4 font-bold text-gray-600 mt-1">ผู้รับผิดชอบ :</div><div class="col-span-7">${nsInfo.names}</div></div><div class="grid grid-cols-12 gap-2 items-center"><div class="col-span-1 text-center text-gray-400"><i class="fa-solid fa-phone"></i></div><div class="col-span-4 font-bold text-gray-600">เบอร์โทร :</div><div class="col-span-7">${nsInfo.phones}</div></div><div class="grid grid-cols-12 gap-2 items-center mt-2 pt-2 border-t border-gray-100"><div class="col-span-1 text-center text-gray-400"><i class="fa-solid fa-forward text-brand-500"></i></div><div class="col-span-4 font-bold text-gray-600">ทีมถัดไป :</div><div class="col-span-7"><span class="border-2 border-red-500 text-red-600 font-bold px-2 py-0.5 rounded bg-white inline-block shadow-sm">${nextSubName}</span></div></div><div class="mt-4 pt-3 border-t-2 border-dashed border-gray-200 text-center"><div class="font-bold text-gray-500 mb-2 text-xs uppercase tracking-wider">ไฟล์แนบ (Attachment)</div>${fileDisplay}</div></div>`; Swal.fire({ title: '', html: html, width: '550px', showCancelButton: true, confirmButtonText: '<i class="fa-brands fa-line text-lg mr-2"></i> Copy for LINE', confirmButtonColor: '#06c755', cancelButtonText: 'ปิด', customClass: { container: 'font-sans', popup: 'rounded-2xl' } }).then((result) => { if(result.isConfirmed) { const text = `💸 รายการอนุมัติค่าใช้จ่าย\n🆔 Job ID : ${item.internalId}\n👷 ผู้รับเหมาที่รับผิดชอบ : 🟥 ${item.subcontractor || '-'} 🟥\n🛠️ ประเภทงาน : ${item.jobType}\n📝 ชื่องาน : ${item.description}\n🏢 หน่วยงานที่แจ้ง : ${item.agency || '-'}\n🔢 Code : ${item.routeCode || '-'}\n💰 ประมาณราคา : 🟥 ${(item.expenses || '0').toLocaleString()} ฿ 🟥\n📅 วันที่และเวลาที่ดำเนินการ : ${actionDateStr}\n👤 ผู้รับผิดชอบ : ${nsInfo.names}\n📞 เบอร์โทร : ${nsInfo.phones}\n⏭️ ผู้รับเหมาถัดไป : 🟥 ${nextSubName} 🟥\n📎 ไฟล์แนบ : ${item.fileUrl || '-'}`; fallbackCopyTextToClipboard(text); } }); };
         window.exportExcel = function() { const dt = document.getElementById('data-table'); if(!dt || dt.rows.length <= 1) { Swal.fire('Info','ไม่มีข้อมูลให้ Export','info'); return; } const wb = XLSX.utils.table_to_book(dt, {sheet: "Data"}); XLSX.writeFile(wb, 'Assignment_Data.xlsx'); };
         window.getLocation = function() { if(!navigator.geolocation) { Swal.fire('Error','Browser not support','error'); return; } $.LoadingOverlay("show"); navigator.geolocation.getCurrentPosition(p => { $.LoadingOverlay("hide"); const loc = `${p.coords.latitude},${p.coords.longitude}`; const url = `https://www.google.com/maps?q=${loc}`; const old = $('#form-gps').val(); $('#form-gps').val(old ? old + '\n' + url : url); }, e => { $.LoadingOverlay("hide"); Swal.fire('Error',e.message,'error'); }); };
+        window.compressAndReadFile = async function(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    if (file.type.match(/image.*/)) {
+                        const img = new Image();
+                        img.onload = function() {
+                            const canvas = document.createElement('canvas');
+                            const MAX_DIM = 800; // Resize to max 800px to save DB space
+                            let w = img.width, h = img.height;
+                            if (w > h && w > MAX_DIM) { h *= MAX_DIM / w; w = MAX_DIM; }
+                            else if (h > MAX_DIM) { w *= MAX_DIM / h; h = MAX_DIM; }
+                            canvas.width = w; canvas.height = h;
+                            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                            resolve({ name: file.name, type: file.type, url: canvas.toDataURL('image/jpeg', 0.6) });
+                        };
+                        img.onerror = () => resolve({ name: file.name, type: file.type, url: e.target.result });
+                        img.src = e.target.result;
+                    } else {
+                        resolve({ name: file.name, type: file.type, url: e.target.result });
+                    }
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        };
+        
+        window.previewImage = function(url) {
+            Swal.fire({
+                imageUrl: url,
+                imageAlt: 'Preview',
+                width: '80%',
+                showCloseButton: true,
+                showConfirmButton: false,
+                customClass: {
+                    image: 'max-h-[80vh] object-contain rounded'
+                }
+            });
+        };
         window.saveAssignment = async function() { 
             $.LoadingOverlay("show", { text: "Processing..." });
             const docId = $('#doc-id').val();
@@ -19,7 +58,28 @@
             
             let fileUrl = $('#form-file-url').val();
             const fileInput = $('#form-file')[0];
-            if (fileInput.files.length > 0) { try { $.LoadingOverlay("text", "Uploading to Drive..."); fileUrl = await uploadToDrive(fileInput.files[0]); } catch (uploadError) { $.LoadingOverlay("hide"); Swal.fire('Upload Failed', 'Cannot upload file to Drive. Please try again.', 'error'); return; } }
+            let filesArray = [];
+            try {
+                if (fileUrl && fileUrl.startsWith('[')) {
+                    filesArray = JSON.parse(fileUrl);
+                } else if (fileUrl) {
+                    filesArray.push({ name: $('#form-file-name').val() || 'attachment', url: fileUrl });
+                }
+            } catch(e) {}
+            
+            if (fileInput.files.length > 0) { 
+                try { 
+                    $.LoadingOverlay("text", "Compressing & Processing File(s)..."); 
+                    for (let i=0; i<fileInput.files.length; i++) {
+                        let result = await window.compressAndReadFile(fileInput.files[i]);
+                        filesArray.push(result);
+                    }
+                } catch (uploadError) { 
+                    $.LoadingOverlay("hide"); Swal.fire('Error', uploadError.message, 'error'); return; 
+                } 
+            }
+            // re-stringify the array to fit in the old schema or save it natively. We'll save string to `fileUrl`.
+            fileUrl = JSON.stringify(filesArray);
             
             const nowIso = new Date().toISOString();
             
@@ -33,8 +93,9 @@
                 }
                 payloadData.symImpact = symVal;
                 const existingItem = docId ? assignments.find(a => a.id === docId) : null; payloadData.actionDate = existingItem ? existingItem.actionDate : nowIso; payloadData.planDate = null; payloadData.planStartTime = null; payloadData.planEndTime = null;
+                payloadData.fileUrl = fileUrl || '';
             } else if (config.isPlan) {
-                const pDate = $('#form-plan-date').val(); const pStart = $('#form-plan-start').val(); const pEnd = $('#form-plan-end').val(); payloadData.actionDate = (pDate && pStart) ? `${pDate}T${pStart}` : (pDate ? `${pDate}T00:00` : nowIso); payloadData.planDate = pDate; payloadData.planStartTime = pStart; payloadData.planEndTime = pEnd; payloadData.sentPlanDate = $('#form-sent-plan-date').val(); payloadData.unplannedImpact = $('#form-unplanned-impact').val(); payloadData.cmId = $('#form-interruption-id-cm').val() || ''; payloadData.project = $('#form-project').val() || ''; payloadData.itemCount = $('#form-interruption-item').val() || ''; payloadData.teamReq = $('#form-team-req').val() || ''; payloadData.gps = ''; payloadData.fileName = ''; payloadData.fileUrl = '';
+                const pDate = $('#form-plan-date').val(); const pStart = $('#form-plan-start').val(); const pEnd = $('#form-plan-end').val(); payloadData.actionDate = (pDate && pStart) ? `${pDate}T${pStart}` : (pDate ? `${pDate}T00:00` : nowIso); payloadData.planDate = pDate; payloadData.planStartTime = pStart; payloadData.planEndTime = pEnd; payloadData.sentPlanDate = $('#form-sent-plan-date').val(); payloadData.unplannedImpact = $('#form-unplanned-impact').val(); payloadData.cmId = $('#form-interruption-id-cm').val() || ''; payloadData.project = $('#form-project').val() || ''; payloadData.itemCount = $('#form-interruption-item').val() || ''; payloadData.teamReq = $('#form-team-req').val() || ''; payloadData.gps = ''; payloadData.fileName = $('#file-name-display').text() || ''; payloadData.fileUrl = fileUrl || '';
             } else {
                 payloadData.actionDate = $('#form-action-date').val() || ''; payloadData.fileName = $('#file-name-display').text() || ''; payloadData.fileUrl = fileUrl || ''; payloadData.gps = $('#form-gps').val() || '';
                 if (config.isSub) { 
@@ -58,7 +119,7 @@
                     if (error) throw error;
                     await sendToSheet(mergedData, config.sheetName);
                 } else {
-                    const insertObj = { created_at: nowIso, updated_at: nowIso, internal_id: payloadData.internalId, category: saveCat, status: 'new', data: payloadData };
+                    const insertObj = { id: crypto.randomUUID(), created_at: nowIso, updated_at: nowIso, internal_id: payloadData.internalId, category: saveCat, status: 'new', data: payloadData };
                     const { error } = await supabaseClient.from('assignments').insert([insertObj]);
                     if (error) throw error;
                     if(config.isSub && payloadData.jobType !== 'Special Job') { 
@@ -66,6 +127,7 @@
                     }
                     await sendToSheet(payloadData, config.sheetName); 
                 }
+                setTimeout(() => window.loadAssignments(), 500);
                 $.LoadingOverlay("hide"); closeModal(); Swal.fire('Saved', '', 'success');
             } catch(e) { $.LoadingOverlay("hide"); Swal.fire('Error', e.message, 'error'); }
         };
@@ -76,12 +138,30 @@
                 if(error) throw error;
                 const c = menuConfig[mergedData.category]; 
                 if(c) await sendToSheet(mergedData, c.sheetName); 
+                window.loadAssignments();
                 $.LoadingOverlay("hide"); 
             }).catch(e => { $.LoadingOverlay("hide"); Swal.fire('Error',e.message,'error'); }); 
         };
-        window.deleteAssignment = function(id) { Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true }).then(async (r) => { if (r.isConfirmed) { await supabaseClient.from('assignments').delete().eq('id', id); } }); };
+        window.deleteAssignment = function(id) { Swal.fire({ title: 'Delete?', icon: 'warning', showCancelButton: true }).then(async (r) => { if (r.isConfirmed) { await supabaseClient.from('assignments').delete().eq('id', id); window.loadAssignments(); } }); };
         window.viewDetail = function(id) { 
-            const item = assignments.find(a => a.id === id); if(!item) return; const nsInfo = extractNS(item.nsRespond); const conf = menuConfig[item.category]; const isSub = conf && conf.isSub; const isPlan = conf && conf.isPlan; const fileLink = item.fileUrl ? `<a href="${item.fileUrl}" target="_blank" class="text-blue-500 hover:underline break-all">${item.fileUrl}</a>` : '-'; const fileDisplay = (item.fileUrl && (item.fileUrl.match(/\.(jpeg|jpg|gif|png)$/) != null || item.fileUrl.includes('googleusercontent') || item.fileUrl.includes('drive.google.com'))) ? `<br><img src="${item.fileUrl}" class="mt-2 rounded-lg max-h-48 object-cover border border-gray-200" alt="Attached Image">` : ''; 
+            const item = assignments.find(a => a.id === id); if(!item) return; const nsInfo = extractNS(item.nsRespond); const conf = menuConfig[item.category]; const isSub = conf && conf.isSub; const isPlan = conf && conf.isPlan; 
+            let fileLink = '-', fileDisplay = '', filesHtml = '';
+            if (item.fileUrl) {
+                try {
+                    let files = item.fileUrl.startsWith('[') ? JSON.parse(item.fileUrl) : [{ url: item.fileUrl, name: item.fileName || 'Attachment' }];
+                    filesHtml = files.map(f => {
+                        if (f.url && (f.url.startsWith('data:image') || f.url.match(/\.(jpeg|jpg|gif|png)$/i))) {
+                            return `<div class="mb-4 bg-gray-50 p-2 rounded border border-gray-100 flex flex-col items-center"><div class="font-medium text-sm mb-2">${f.name}</div><img src="${f.url}" class="rounded-lg max-h-48 object-cover border border-gray-200 cursor-pointer hover:opacity-80 transition" onclick="window.previewImage('${f.url}')" alt="${f.name}"><div class="flex gap-4 mt-2"><button type="button" onclick="window.previewImage('${f.url}')" class="text-blue-600 hover:underline text-sm"><i class="fa-solid fa-eye mr-1"></i>ดูภาพเต็ม</button><a href="${f.url}" download="${f.name}" class="text-green-600 hover:underline text-sm"><i class="fa-solid fa-download mr-1"></i>ดาวน์โหลด</a></div></div>`;
+                        } else {
+                            return `<div class="mb-2 p-2 bg-gray-50 rounded border border-gray-100 flex items-center justify-between"><div class="truncate mr-2"><i class="fa-solid fa-file mr-2 text-gray-400"></i>${f.name}</div><a href="${f.url}" download="${f.name}" class="text-green-600 hover:underline text-sm whitespace-nowrap"><i class="fa-solid fa-download mr-1"></i>ดาวน์โหลด</a></div>`;
+                        }
+                    }).join('');
+                    fileLink = ''; fileDisplay = filesHtml;
+                } catch(e) {
+                    fileLink = `<a href="${item.fileUrl}" target="_blank" class="text-blue-500 hover:underline break-all">${item.fileUrl}</a>`; 
+                    fileDisplay = (item.fileUrl.match(/\.(jpeg|jpg|gif|png)$/i) != null) ? `<br><img src="${item.fileUrl}" class="mt-2 rounded-lg max-h-48 object-cover border border-gray-200" alt="Attached Image">` : '';
+                }
+            }
             
             // FIX: แก้ไขการคำนวณ Next Team ให้เป็น Relative ต่อจากงานนี้ ไม่ใช่ Global Index
             let nextSubName = '-'; 
@@ -223,7 +303,7 @@
         // NEW: Function to update sidebar notification badges
         window.updateSidebarBadges = function() {
             // Categories to track
-            const cats = ['plan_interruption', 'summary_plan', 'team', 'sub_preventive', 'sub_reroute', 'sub_reconfigure'];
+            const cats = ['plan_interruption', 'summary_plan', 'team', 'request_job', 'sub_preventive', 'sub_reroute', 'sub_reconfigure'];
             
             // Reset counts
             const counts = {};
@@ -329,6 +409,7 @@
             { id: 'summary_plan', label: 'Summary Plan (List)' },
             { id: 'summary_dashboard', label: 'Dashboard Project' },
             { id: 'team', label: 'Interruption Team' },
+            { id: 'request_job', label: 'Request Job' },
             { id: 'subcontractor_menu', label: 'Subcontractor (Menu)' },
             { id: 'sub_dashboard', label: 'Dashboard & Cost' },
             { id: 'sub_preventive', label: 'Sub Preventive' },
@@ -420,7 +501,10 @@
                 let html = `<div class="p-4 bg-gray-50 border border-gray-200 rounded-xl">
                     <div class="flex justify-between items-center mb-3">
                         <h5 class="font-bold text-gray-800"><i class="fa-solid fa-user text-indigo-400 mr-2"></i> Role: <span class="text-indigo-600">${roleName}</span></h5>
-                        ${isAdmin ? '<span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded shadow-sm">All Access (Fixed)</span>' : `<button onclick="deleteRoleConfig('${roleName}')" class="text-red-500 hover:text-red-600 text-sm"><i class="fa-solid fa-trash-can mr-1"></i> ลบ</button>`}
+                        <div class="flex items-center gap-3">
+                            <button onclick="previewRoleConfig('${roleName}')" class="text-orange-600 hover:text-orange-700 text-sm font-bold bg-orange-100 px-3 py-1.5 rounded transition shadow-sm"><i class="fa-solid fa-eye mr-1"></i> Preview</button>
+                            ${isAdmin ? '<span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded shadow-sm">All Access (Fixed)</span>' : `<button onclick="deleteRoleConfig('${roleName}')" class="text-red-500 hover:text-red-600 text-sm"><i class="fa-solid fa-trash-can mr-1"></i> ลบ</button>`}
+                        </div>
                     </div>`;
                 
                 // Menus
@@ -498,6 +582,60 @@
             saveMasterDataSettings('บันทึกสิทธิ์การใช้งานสำเร็จ');
         };
 
+        window.originalUserRoles = null;
+
+        window.previewRoleConfig = function(roleName) {
+            if (!window.originalUserRoles) {
+                window.originalUserRoles = [...window.userRoles];
+            }
+            window.userRoles = [roleName];
+            window.isAdmin = window.userRoles.includes('Admin');
+            $('#role-preview-text').text(`Preview Mode: ${roleName}`);
+            $('#role-preview-banner').removeClass('hidden');
+            
+            Swal.fire({
+                icon: 'info',
+                title: 'Preview Mode',
+                text: `คุณกำลังดูเว็ปไซต์ในมุมมองของ: ${roleName}`,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000
+            });
+
+            window.applyRolePermissions();
+            // Redirect if current view is suddenly hidden
+            if (!window.hasPermission(currentView, 'menu') && currentView !== 'setting') {
+                if (window.switchView) window.switchView('dashboard_analytics');
+            } else if (window.updateView) {
+                window.updateView();
+            }
+            if (typeof window.renderTable === 'function') window.renderTable();
+        };
+
+        window.exitRolePreview = function() {
+            if (window.originalUserRoles) {
+                window.userRoles = [...window.originalUserRoles];
+                window.originalUserRoles = null;
+                window.isAdmin = window.userRoles.includes('Admin');
+            }
+            $('#role-preview-banner').addClass('hidden');
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'Exit Preview',
+                text: `กลับสู่สิทธิ์ปกติของคุณแล้ว`,
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 2000
+            });
+
+            window.applyRolePermissions();
+            if (window.updateView) window.updateView();
+            if (typeof window.renderTable === 'function') window.renderTable();
+        };
+
         async function saveMasterDataSettings(successMsg) {
             try {
                 await supabaseClient.from('master_settings').upsert({ id: 'masterData', data: masterData });
@@ -539,10 +677,10 @@
 
         async function initApp() { 
             try { 
-                const loadAssignments = async () => {
+                window.loadAssignments = async () => {
                     const { data, error } = await supabaseClient.from('assignments').select('*').order('internal_id', { ascending: false });
                     if (error) { console.error("Load Assignments Error:", error); return; }
-                    assignments = data.map(r => ({ id: r.id, ...(r.data || {}), status: r.status, createdAt: r.created_at, updatedAt: r.updated_at, internalId: r.internal_id }));
+                    assignments = data.map(r => ({ id: r.id, ...(r.data || {}), status: r.status, createdAt: r.created_at, updatedAt: r.updated_at, internalId: r.internal_id, category: r.category }));
                     window.updateSidebarBadges();
                     window.updateView(); 
                 };
@@ -569,14 +707,14 @@
                 };
 
                 // Initial Load
-                loadAssignments();
+                window.loadAssignments();
                 loadSettings();
                 loadLinkSupport();
 
                 // Supabase Real-time Subscriptions
                 supabaseClient.channel('assignments_channel')
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'assignments' }, payload => {
-                        loadAssignments();
+                        window.loadAssignments();
                     }).subscribe();
 
                 supabaseClient.channel('settings_channel')
@@ -601,7 +739,16 @@
             $('#filter-status').on('change', function() { currentPage = 1; renderTable(); }); 
 			$('#filter-duedate-month').on('change', function() { currentPage = 1; renderTable(); }); 
             checkAuthState(); 
-            $('#form-file').change(function(e) { $('#file-name-display').text(e.target.files[0] ? e.target.files[0].name : 'Click to upload'); }); 
+            $('#form-file').change(function(e) { 
+                const files = e.target.files;
+                if (files.length === 0) {
+                    $('#file-name-display').text('คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่ (เลือกได้หลายไฟล์)');
+                } else if (files.length === 1) {
+                    $('#file-name-display').text(files[0].name);
+                } else {
+                    $('#file-name-display').text(`เลือก ${files.length} ไฟล์`);
+                }
+            }); 
             document.getElementById('sidebar-overlay').addEventListener('click', toggleSidebar); 
             ['#form-job-type', '#form-agency', '#form-team-req'].forEach(id => { $(id).change(function() { if($(this).val() === 'Other') $(id + '-other').addClass('show'); else $(id + '-other').removeClass('show'); }); }); 
             

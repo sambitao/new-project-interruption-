@@ -107,10 +107,10 @@
                 pageData.forEach(item => {
                     const badge = `<span class="status-badge status-${item.status}">${item.status.toUpperCase().replace('_', ' ')}</span>`;
                     const sub = config && config.isSub ? (item.subcontractor || '-') : (item.teamReq || '-');
-                    const acts = window.getActionButtons(item, config && config.isSub, config && config.isPlan);
+                    let acts = window.getActionButtons(item, config && config.isSub, config && config.isPlan);
                     const nsNames = extractNS(item.nsRespond).names; // Extract NS names for reuse
 
-                    let rowHtml = `<td class="p-3 text-center font-mono font-bold text-brand-600 text-xs" title="${item.internalId}">${item.internalId}</td>`;
+                    let rowHtml = `<td class="p-3 text-center font-mono font-bold text-brand-600 hover:text-brand-800 hover:underline cursor-pointer text-xs transition" title="คลิกเพื่อแก้ไขข้อมูล (รหัส: ${item.internalId})" onclick="openModal('${item.id}')">${item.internalId}</td>`;
                     
                     if (currentCategoryFilter === 'summary_plan') {
                         // Summary Plan Rows
@@ -129,7 +129,7 @@
                                     <td class="p-3 w-24 align-middle">${progressHtml}</td>
                                     <td class="p-3 truncate max-w-[100px] text-xs">${extractNS(item.nsRespond).names}</td>
                                     <td class="p-3 text-center">${badge}</td>`;
-                    
+                        
                     } else if (config && config.isPlan) {
                         rowHtml += `<td class="p-3 whitespace-normal">${item.jobType||'-'}</td><td class="p-3 text-xs">${item.project||'-'}</td><td class="p-3 max-w-[400px] whitespace-normal break-words align-top">${item.description||'-'}</td><td class="p-3 text-xs">${item.agency||'-'}</td><td class="p-3 text-center text-xs">${item.sentPlanDate ? fmtDate(item.sentPlanDate, true) : '-'}</td>`;
                         const actionTime = (item.planStartTime && item.planEndTime) ? `<br><span class="text-gray-400">${item.planStartTime}-${item.planEndTime}</span>` : '';
@@ -154,8 +154,15 @@
                         m += `<button onclick="deleteAssignment('${item.id}')" class="text-gray-400 hover:text-red-600 mx-1"><i class="fa-solid fa-trash-can"></i></button>`;
                     }
                     
+                    // Add Assignment by NPD button, opens modal to ask for Project Code.
+                    if (currentCategoryFilter === 'summary_plan') {
+                        const projectCodeParam = (item.projectCode || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                        acts += `<button type="button" onclick="event.stopPropagation(); window.openNpdAssignmentForm('', this.getAttribute('data-project'))" data-project="${projectCodeParam}" class="px-2 py-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded text-xs font-bold transition flex items-center shadow-sm ml-2 whitespace-nowrap"><i class="fa-solid fa-plus mr-1"></i> Assignment TPD</button>`;
+                        acts += `<button type="button" onclick="event.stopPropagation(); window.openNpdProjectModal(this.getAttribute('data-project'), '${item.id}')" data-project="${projectCodeParam}" class="px-2 py-1 bg-green-50 text-green-600 hover:bg-green-100 rounded text-xs font-bold transition flex items-center shadow-sm ml-2 whitespace-nowrap"><i class="fa-solid fa-list mr-1"></i> View Assignment</button>`;
+                    }
+
                     if(item.fileUrl && !(config && config.isPlan)) m+= `<a href="${item.fileUrl}" target="_blank" class="text-gray-400 hover:text-blue-500 mx-1"><i class="fa-solid fa-cloud-arrow-down"></i></a>`;
-                    rowHtml += `<td class="p-3 text-center"><div class="flex items-center justify-center space-x-2"><div class="flex gap-1">${acts}</div><div class="h-4 w-px bg-gray-200"></div><div class="flex">${m}</div></div></td>`;
+                    rowHtml += `<td class="p-3 text-center"><div class="flex items-center justify-center space-x-2"><div class="flex flex-wrap gap-1 items-center justify-center">${acts}</div><div class="h-4 w-px bg-gray-200"></div><div class="flex">${m}</div></div></td>`;
                     tbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-gray-50 border-b border-gray-50">${rowHtml}</tr>`);
                 });
             }
@@ -448,8 +455,22 @@
                     }
                     else { $('#form-due-date').val(item.dueDate); $('#form-team-req').val(item.teamReq); $('#form-req-person').val(item.reqPerson); $('#form-ref-job-id').val(item.refJobId); $('#form-gps').val(item.gps); }
                     if(conf.isSub) $('#form-due-date-sub').val(item.dueDate);
-                    if(item.fileName) { $('#file-name-display').text(item.fileName); }
-                    if(item.fileUrl) { $('#existing-file-link').removeClass('hidden').find('a').attr('href', item.fileUrl); }
+                    $('#file-name-display').text('คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่ (เลือกได้หลายไฟล์)');
+                    $('#form-file-url').val(item.fileUrl || '');
+
+                    if (item.fileUrl) {
+                        try {
+                            const files = item.fileUrl.startsWith('[') ? JSON.parse(item.fileUrl) : [{ url: item.fileUrl, name: item.fileName || 'Archive' }];
+                            $('#existing-file-link').removeClass('hidden').html('');
+                            files.forEach(f => {
+                                $('#existing-file-link').append(`<span class="flex gap-2 items-center bg-gray-100 px-2 py-1 rounded w-full"><i class="fa-solid fa-paperclip text-brand-500"></i><span class="truncate max-w-[200px] text-xs">${f.name}</span><button type="button" class="ml-auto text-blue-500 text-xs hover:underline cursor-pointer" onclick="window.previewImage && window.previewImage('${f.url}')" title="Preview"><i class="fa-solid fa-eye"></i></button><a href="${f.url}" download="${f.name}" class="text-green-500 text-xs hover:underline" title="Download"><i class="fa-solid fa-download"></i></a></span>`);
+                            });
+                        } catch(e) {
+                            $('#existing-file-link').removeClass('hidden').html(`<a href="${item.fileUrl}" download="Attachment" class="hover:underline flex items-center bg-gray-100 px-2 py-1 rounded"><i class="fa-solid fa-paperclip mr-2 text-brand-500"></i> ดูไฟล์เดิม/ดาวน์โหลด</a>`);
+                        }
+                    } else {
+                        $('#existing-file-link').addClass('hidden').html('');
+                    }
                     $('#modal-title').html('<span class="bg-brand-100 text-brand-600 p-2 rounded-lg mr-3"><i class="fa-solid fa-pen-to-square"></i></span> แก้ไขข้อมูล ' + conf.title); 
                 }
             } else {
@@ -457,7 +478,8 @@
                  
                  if(conf.isSub) { $('.rr-label.text-brand-600').text('ทีมที่ได้รับงานนี้ (Current)'); }
                  $('#modal-title').html('<span class="bg-brand-100 text-brand-600 p-2 rounded-lg mr-3"><i class="fa-solid fa-plus"></i></span> บันทึกงานใหม่ ' + conf.title);
-                 $('#file-name-display').text('คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่'); $('#existing-file-link').addClass('hidden');
+                 $('#file-name-display').text('คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่ (เลือกได้หลายไฟล์)'); $('#existing-file-link').addClass('hidden').html('');
+                 $('#form-file-url').val('');
             }
             $('#assignment-modal').removeClass('hidden'); 
         };
@@ -580,10 +602,302 @@
         window.addSettingItem = async function(key, inputId) { const value = $(`#${inputId}`).val(); if (!value) return; try { const {data: snap} = await supabaseClient.from('master_settings').select('data').eq('id', 'masterData').single(); let currentSettings = snap ? snap.data : {}; if(!currentSettings[key]) currentSettings[key] = []; if(!currentSettings[key].includes(value)) currentSettings[key].push(value); await supabaseClient.from('master_settings').upsert({ id: 'masterData', data: currentSettings }); $(`#${inputId}`).val(''); Swal.fire({ icon: 'success', title: 'บันทึกเรียบร้อย', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 }); } catch (error) { console.error("Error adding setting:", error); Swal.fire('Error', 'บันทึกไม่สำเร็จ: ' + error.message, 'error'); } };
         window.removeSettingItem = async function(k, v) { try { const {data: snap} = await supabaseClient.from('master_settings').select('data').eq('id', 'masterData').single(); let currentSettings = snap ? snap.data : {}; if(currentSettings[k]) { currentSettings[k] = currentSettings[k].filter(item => item !== v); await supabaseClient.from('master_settings').upsert({ id: 'masterData', data: currentSettings }); } } catch(err) { Swal.fire('Error', err.message, 'error'); } };
         window.addNSRespond = async function() { const n = $('#add-ns-name').val(); const p = $('#add-ns-phone').val(); if(n) { const val = p ? `${n} - ${p}` : n; try { const {data: snap} = await supabaseClient.from('master_settings').select('data').eq('id', 'masterData').single(); let currentSettings = snap ? snap.data : {}; if(!currentSettings.nsRespond) currentSettings.nsRespond = []; if(!currentSettings.nsRespond.includes(val)) currentSettings.nsRespond.push(val); await supabaseClient.from('master_settings').upsert({ id: 'masterData', data: currentSettings }); $('#add-ns-name').val(''); $('#add-ns-phone').val(''); Swal.fire({ icon: 'success', title: 'เพิ่มข้อมูลเรียบร้อย', toast: true, position: 'top-end', showConfirmButton: false, timer: 1500 }); } catch(err) { Swal.fire('Error', err.message, 'error'); } } };
-        async function uploadToDrive(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = async function() { const content = reader.result.split(',')[1]; const formData = new URLSearchParams(); formData.append('action', 'upload'); formData.append('fileName', file.name); formData.append('mimeType', file.type); formData.append('fileData', content); try { const response = await fetch(GAS_URL, { method: 'POST', body: formData, redirect: 'follow' }); const result = await response.json(); if (result.status === 'success') { resolve(result.url); } else { reject(new Error(result.message)); } } catch (error) { reject(error); } }; reader.onerror = error => reject(error); reader.readAsDataURL(file); }); }
-        async function sendToSheet(data, sheetName) { const fd = new URLSearchParams(); fd.append('action','save'); fd.append('sheetName',sheetName); fd.append('jobId',data.internalId); fd.append('fullData',JSON.stringify(data)); fetch(GAS_URL, {method:'POST', body:fd}); }
+        async function uploadToDrive(file) { return new Promise((resolve) => { resolve(''); }); }
+        async function sendToSheet(data, sheetName) { return Promise.resolve(); }
         window.confirmClearDatabase = function() { Swal.fire({title:'Reset All?', icon:'warning', showCancelButton:true}).then(r=>{ if(r.isConfirmed) { supabaseClient.from('assignments').delete().neq('id', 'non-existent').then(()=>{ initializeDatabase(true); }); } }); };
         function initializeDatabaseMaster(h) { const d = { nsRespond: ["Support"], subcontractors: ["Sub A", "Sub B"], rrIndexes: {} }; supabaseClient.from('master_settings').upsert({id: 'masterData', data: d}); }
         window.testConnection = async function() { try { await supabaseClient.from('master_settings').select('id').limit(1); Swal.fire('OK','Connected','success'); } catch(e) { Swal.fire('Fail',e.message,'error'); } };
         window.actionCancel = function(id) { Swal.fire({title: 'Cancel', input: 'text'}).then(r => { if(r.value) window.updateStatus(id, 'cancel', {cancelReason: r.value}); }); };
         window.actionAssign = function(id) { Swal.fire({title: 'Assign', input: 'text', inputPlaceholder: 'ระบุเลข AS'}).then(r => { if(r.value) { window.updateStatus(id, 'assign', { asNumber: r.value, assignDate: new Date().toISOString() }); } }); };
+
+        window.handleMainAddData = function() {
+            if (currentCategoryFilter === 'summary_plan') {
+                window.openNpdProjectModal('');
+            } else {
+                window.openModal('');
+            }
+        };
+
+        // === NPD ASSIGNMENT FUNCTIONS ===
+        window.openNpdProjectModal = function(projectCode = '', summaryPlanId = '') {
+            let escapeText = function(t){return t ? String(t).replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])) : ''};
+            let codeVal = projectCode || '';
+            let displayHtml = codeVal ? `<span class="text-gray-900">${escapeText(codeVal)}</span>` : '<span class="text-gray-400 font-normal italic">(ไม่มี Project Code)</span>';
+            if (summaryPlanId) {
+                displayHtml += ` <button onclick="editProjectCode('${summaryPlanId}', '${escapeText(codeVal)}')" class="ml-2 text-gray-400 hover:text-blue-600 transition" title="${codeVal ? 'แก้ไข Project Code' : 'เพิ่ม Project Code'}"><i class="fa-solid fa-pen text-sm"></i></button>`;
+            }
+            $('#npd-modal-project-display').html(displayHtml);
+            $('#btn-open-npd-form').data('projectcode', projectCode);
+            $('#btn-open-npd-form').data('summaryid', summaryPlanId);
+            
+            // Allow clicking Add Assignment immediately, regardless of projectCode
+            $('#btn-open-npd-form').prop('disabled', false).removeClass('opacity-50 cursor-not-allowed');
+
+            // If there's no code yet, but they click Add Assignment, it'll just list nothing for now
+            renderNpdAssignmentTable(projectCode);
+            
+            if (!projectCode) {
+                $('#npd-assignment-table-body').html('<tr><td colspan="19" class="py-12 text-center text-gray-400"><i class="fa-solid fa-folder-open text-3xl mb-3"></i><p>ยังไม่มี Project Code. คุณสามารถกรอก Project Code ได้จากการกด Add Assignment</p></td></tr>');
+            }
+            
+            $('#npd-project-modal').removeClass('hidden');
+        };
+
+        window.editProjectCode = function(summaryPlanId, currentCode) {
+            Swal.fire({
+                title: 'ระบุ Project Code',
+                input: 'text',
+                inputValue: currentCode,
+                inputPlaceholder: 'เช่น PRBB2601-83032',
+                showCancelButton: true,
+                confirmButtonColor: '#3b82f6',
+                confirmButtonText: 'บันทึก',
+                preConfirm: (val) => {
+                    if (!val) { Swal.showValidationMessage('กรุณาระบุ Project Code'); }
+                    return val;
+                }
+            }).then((r) => {
+                if (r.isConfirmed) {
+                    $.LoadingOverlay('show');
+                    const existingItem = assignments.find(a => a.id === summaryPlanId) || {};
+                    const mergedData = { ...existingItem, projectCode: r.value, updatedAt: new Date().toISOString() };
+                    supabaseClient.from('assignments').update({ updated_at: new Date().toISOString(), data: mergedData }).eq('id', summaryPlanId).then(({error}) => {
+                        $.LoadingOverlay('hide');
+                        if (error) { Swal.fire('Error', error.message, 'error'); }
+                        else {
+                            Swal.fire('Saved', 'อัปเดต Project Code สำเร็จ', 'success');
+                            window.loadAssignments();
+                            window.openNpdProjectModal(r.value, summaryPlanId);
+                        }
+                    });
+                }
+            });
+        };
+
+        window.closeNpdProjectModal = function() {
+            $('#npd-project-modal').addClass('hidden');
+        };
+
+        function renderNpdAssignmentTable(projectCode) {
+            const tbody = $('#npd-assignment-table-body');
+            tbody.empty();
+            
+            const npdJobs = assignments.filter(a => a.category === 'npd_assignment' && a.projectCode === projectCode);
+            
+            if (npdJobs.length === 0) {
+                tbody.html(`<tr><td colspan="19" class="py-6 text-center text-gray-500 bg-gray-50 rounded-b-lg">ไม่พบ Assignment สำหรับ Project Code นี้. สามารถเพิ่มใหม่ได้ที่ปุ่ม Add Assignment</td></tr>`);
+                return;
+            }
+            
+            npdJobs.forEach(job => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-mono font-bold text-gray-800">${job.assignmentCode || '-'}</td>
+                    <td class="px-4 py-3">${job.jobType || '-'}</td>
+                    <td class="px-4 py-3">${job.jobSsf || '-'}</td>
+                    <td class="px-4 py-3">${job.project || '-'}</td>
+                    <td class="px-4 py-3 font-mono text-gray-600">${job.cableCode || '-'}</td>
+                    <td class="px-4 py-3 text-gray-600 truncate max-w-[150px]" title="${job.jobDesc || ''}">${job.jobDesc || '-'}</td>
+                    <td class="px-4 py-3 text-gray-600 truncate max-w-[150px]" title="${job.detail || ''}">${job.detail || '-'}</td>
+                    <td class="px-4 py-3 font-mono text-[10px]"><a href="${job.gps?.includes('http') ? job.gps : 'https://maps.google.com/?q='+job.gps}" target="_blank" class="text-blue-500 underline">${job.gps || '-'}</a></td>
+                    <td class="px-4 py-3">${job.requestAsDate ? fmtDate(job.requestAsDate, true) : '-'}</td>
+                    <td class="px-4 py-3">${job.assignNpdDate ? fmtDate(job.assignNpdDate, true) : '-'}</td>
+                    <td class="px-4 py-3">${job.assignNpdBy || '-'}</td>
+                    <td class="px-4 py-3">${job.assignNsBy || '-'}</td>
+                    <td class="px-4 py-3">${job.subcontractor || '-'}</td>
+                    <td class="px-4 py-3">${job.conType || '-'}</td>
+                    <td class="px-4 py-3">${job.reqKavis || '-'}</td>
+                    <td class="px-4 py-3">${job.confirmKavisRow || '-'}</td>
+                    <td class="px-4 py-3">${job.statusKavisRow || '-'}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 rounded text-xs font-bold bg-blue-100 text-blue-700">${job.status || 'New'}</span></td>
+                    <td class="px-4 py-3 text-center sticky right-0 bg-gray-50 shadow-sm border-l border-gray-100">
+                        <button onclick="openNpdAssignmentForm('${job.id}')" class="text-blue-500 hover:bg-blue-200 p-1.5 rounded transition" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="deleteNpdAssignment('${job.id}', '${projectCode}')" class="text-red-500 hover:bg-red-200 p-1.5 rounded transition" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
+                    </td>
+                `;
+                tbody.append(tr);
+            });
+        }
+
+        window.openNpdAssignmentForm = function(id = '', directProjectCode = '') {
+            console.log('openNpdAssignmentForm called!', id, directProjectCode);
+            try {
+                const projectCode = directProjectCode || $('#btn-open-npd-form').data('projectcode') || '';
+                // Allow opening an empty form to create a new project code assignments
+                
+                $('#npd-assignment-form')[0].reset();
+                $('#npd-form-doc-id').val('');
+                
+                // Populate dropdowns
+                const subcSelect = $('#npd-form-subcontractor');
+                subcSelect.empty().append('<option value="">เลือกผู้รับเหมา...</option>');
+                if (masterData.subcontractors) {
+                    masterData.subcontractors.forEach(s => subcSelect.append(new Option(s, s)));
+                }
+
+                const assignNsSelect = $('#npd-form-assign-ns');
+                assignNsSelect.empty().append('<option value="">เลือก NS Respond...</option>');
+                if (masterData.nsRespond) {
+                    masterData.nsRespond.forEach(n => assignNsSelect.append(new Option(n, n)));
+                }
+                
+                // Set NPD default from login
+                $('#npd-form-assign-npd').val($('#status-text').text() || 'System User');
+
+                if (id) {
+                    const job = assignments.find(a => a.id === id);
+                    if (job) {
+                        $('#npd-form-doc-id').val(job.id);
+                        $('#npd-form-project-code').val(job.projectCode || '');
+                        $('#npd-form-assignment').val(job.assignmentCode || '');
+                        $('#npd-form-jobtype').val(job.jobType || '');
+                        $('#npd-form-jobssf').val(job.jobSsf || '');
+                        $('#npd-form-project').val(job.project || '');
+                        $('#npd-form-cablecode').val(job.cableCode || '');
+                        $('#npd-form-jobdt').val(job.jobDesc || '');
+                        $('#npd-form-detail').val(job.detail || '');
+                        $('#npd-form-gps').val(job.gps || '');
+                        $('#npd-form-req-as-date').val(job.requestAsDate || '');
+                        $('#npd-form-assign-npd-date').val(job.assignNpdDate || '');
+                        $('#npd-form-assign-npd').val(job.assignNpdBy || '');
+                        $('#npd-form-assign-ns').val(job.assignNsBy || '');
+                        $('#npd-form-subcontractor').val(job.subcontractor || '');
+                        $('#npd-form-contype').val(job.conType || '');
+                        $('#npd-form-req-kavis').val(job.reqKavis || '');
+                        $('#npd-form-confirm-kavis').val(job.confirmKavisRow || '');
+                        $('#npd-form-status-kavis').val(job.statusKavisRow || '');
+                    }
+                } else {
+                    $('#npd-form-project-code').val(projectCode);
+                }
+                
+                $('#npd-assignment-form-modal').removeClass('hidden');
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Error in openNpdAssignmentForm', String(err), 'error');
+            }
+        };
+
+        window.closeNpdAssignmentForm = function() {
+            $('#npd-assignment-form-modal').addClass('hidden');
+        };
+
+        window.getLocationNpd = function() {
+            if(!navigator.geolocation) { Swal.fire('Error','Browser not support','error'); return; }
+            $.LoadingOverlay("show");
+            navigator.geolocation.getCurrentPosition(p => {
+                $.LoadingOverlay("hide");
+                const loc = `${p.coords.latitude},${p.coords.longitude}`;
+                const url = `https://www.google.com/maps?q=${loc}`;
+                const old = $('#npd-form-gps').val();
+                $('#npd-form-gps').val(old ? old + '\n' + url : url);
+            }, e => {
+                $.LoadingOverlay("hide");
+                Swal.fire('Error',e.message,'error');
+            });
+        };
+
+        window.saveNpdAssignment = async function() {
+            if (!$('#npd-form-project-code').val() || !$('#npd-form-assignment').val() || !$('#npd-form-jobtype').val() || !$('#npd-form-project').val() || !$('#npd-form-subcontractor').val()) {
+                Swal.fire('Warning', 'กรุณากรอกข้อมูลบังคับ (*) ให้ครบถ้วน', 'warning');
+                return;
+            }
+            
+            $.LoadingOverlay('show', { text: 'Saving...' });
+            const docId = $('#npd-form-doc-id').val();
+            const projectCode = $('#npd-form-project-code').val();
+            const nowIso = new Date().toISOString();
+            
+            const payload = {
+                projectCode: projectCode,
+                assignmentCode: $('#npd-form-assignment').val(),
+                jobType: $('#npd-form-jobtype').val(),
+                jobSsf: $('#npd-form-jobssf').val(),
+                project: $('#npd-form-project').val(),
+                cableCode: $('#npd-form-cablecode').val(),
+                jobDesc: $('#npd-form-jobdt').val(),
+                detail: $('#npd-form-detail').val(),
+                gps: $('#npd-form-gps').val(),
+                requestAsDate: $('#npd-form-req-as-date').val(),
+                assignNpdDate: $('#npd-form-assign-npd-date').val(),
+                assignNpdBy: $('#npd-form-assign-npd').val(),
+                assignNsBy: $('#npd-form-assign-ns').val(),
+                subcontractor: $('#npd-form-subcontractor').val(),
+                conType: $('#npd-form-contype').val(),
+                reqKavis: $('#npd-form-req-kavis').val(),
+                confirmKavisRow: $('#npd-form-confirm-kavis').val(),
+                statusKavisRow: $('#npd-form-status-kavis').val()
+            };
+            
+            try {
+                if (docId) {
+                    const existingItem = assignments.find(a => a.id === docId) || {};
+                    const mergedData = { ...existingItem, ...payload, updatedAt: nowIso };
+                    
+                    const { error } = await supabaseClient.from('assignments').update({
+                        updated_at: nowIso,
+                        data: mergedData
+                    }).eq('id', docId);
+                    if (error) throw error;
+                } else {
+                    payload.createdAt = nowIso;
+                    payload.status = 'New';
+                    const newId = crypto.randomUUID();
+                    const insertObj = {
+                        id: newId,
+                        created_at: nowIso,
+                        updated_at: nowIso,
+                        internal_id: 'NPD-' + Date.now().toString().slice(-6),
+                        category: 'npd_assignment',
+                        status: 'New',
+                        data: payload
+                    };
+                    const { error } = await supabaseClient.from('assignments').insert([insertObj]);
+                    if (error) throw error;
+                }
+                
+                // Backfill Project Code to parent summary_plan if it was empty
+                const summaryIdToUpdate = $('#btn-open-npd-form').data('summaryid');
+                const summaryPCodeToUpdate = $('#btn-open-npd-form').data('projectcode');
+                if (summaryIdToUpdate && projectCode && summaryPCodeToUpdate !== projectCode) {
+                    const summaryItem = assignments.find(a => a.id === summaryIdToUpdate);
+                    if (summaryItem) {
+                        const mergedData = { ...summaryItem, projectCode: projectCode, updatedAt: nowIso };
+                        await supabaseClient.from('assignments').update({ updated_at: nowIso, data: mergedData }).eq('id', summaryIdToUpdate);
+                        // Update button data so if they add another one, it doesn't trigger again
+                        $('#btn-open-npd-form').data('projectcode', projectCode);
+                        // Update the modal display header
+                        $('#npd-modal-project-display').html(`${String(projectCode).replace(/[&<>'"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))} <button onclick="editProjectCode('${summaryIdToUpdate}', '${projectCode}')" class="ml-2 text-gray-400 hover:text-blue-600 transition" title="แก้ไข Project Code"><i class="fa-solid fa-pen text-sm"></i></button>`);
+                    }
+                }
+
+                await window.loadAssignments();
+                closeNpdAssignmentForm();
+                setTimeout(() => renderNpdAssignmentTable(projectCode), 500); // Reload table
+                $.LoadingOverlay('hide');
+                Swal.fire('Saved', 'บันทึก Assignment เรียบร้อย', 'success');
+            } catch (error) {
+                $.LoadingOverlay('hide');
+                Swal.fire('Error', error.message, 'error');
+            }
+        };
+
+        window.deleteNpdAssignment = function(id, projectCode) {
+            Swal.fire({
+                title: 'Delete?',
+                text: 'คุณต้องการลบ Assignment นี้ใช่หรือไม่?',
+                icon: 'warning',
+                showCancelButton: true
+            }).then(async r => {
+                if (r.isConfirmed) {
+                    $.LoadingOverlay('show');
+                    await supabaseClient.from('assignments').delete().eq('id', id);
+                    await window.loadAssignments();
+                    renderNpdAssignmentTable(projectCode);
+                    $.LoadingOverlay('hide');
+                    Swal.fire('Deleted', 'ลบเรียบร้อย', 'success');
+                }
+            });
+        };
+        // === END NPD ASSIGNMENT FUNCTIONS ===
+

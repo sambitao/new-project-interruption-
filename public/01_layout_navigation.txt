@@ -125,107 +125,124 @@
     </div>
 
     <!-- Main Content -->
+    <div id="role-preview-banner" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-[9999] bg-orange-600 text-white px-6 py-3 rounded-full shadow-lg hidden flex items-center gap-4 border-2 border-white">
+        <div class="flex items-center gap-2 font-bold whitespace-nowrap text-sm">
+            <i class="fa-solid fa-eye animate-pulse"></i>
+            <span id="role-preview-text">Preview Mode: ...</span>
+        </div>
+        <button onclick="exitRolePreview()" class="bg-white text-orange-600 px-4 py-1 rounded-full text-xs font-bold hover:bg-orange-50 transition shadow-sm whitespace-nowrap">
+            ออก (Exit)
+        </button>
+    </div>
+
     <div id="main-app-content" class="flex w-full h-full opacity-0 pointer-events-none transition-opacity duration-500">
         <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-20 hidden lg:hidden transition-opacity"></div>
     
     <!-- Sidebar -->
-    <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 w-72 bg-white shadow-xl transform -translate-x-full lg:translate-x-0 transition-all duration-300 z-30 flex flex-col h-full border-r border-gray-200 whitespace-nowrap">
-        <div class="p-6 border-b border-gray-100 flex items-center justify-center bg-gray-50">
+    <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 w-60 bg-white shadow-xl transform -translate-x-full lg:translate-x-0 transition-all duration-300 z-30 flex flex-col h-full border-r border-gray-200 whitespace-nowrap">
+        <div class="p-3 border-b border-gray-100 flex items-center justify-center bg-gray-50 flex-shrink-0">
             <div class="text-center overflow-hidden">
-                <div class="flex justify-center items-center mb-3">
+                <div class="flex justify-center items-center mb-1.5">
 						
           				<img src="SYMC logo.png" 
                          alt="Logo" 
-                         class="w-16 h-16 rounded-full object-cover shadow-sm border-2 border-white bg-white">
+                         class="w-10 h-10 rounded-full object-cover shadow-sm border-2 border-white bg-white">
 					
                 </div>
 				
-                <h1 class="text-xl font-bold text-gray-800 tracking-tight">Assignment</h1>
-                <h2 class="text-xs font-semibold text-gray-500 tracking-wide uppercase mt-1">Interruption Team</h2>
+                <h1 class="text-base font-bold text-gray-800 tracking-tight leading-tight">Assignment</h1>
+                <h2 class="text-[9px] font-semibold text-gray-500 tracking-wide uppercase mt-0.5">Interruption Team</h2>
             </div>
         </div>
-        <nav class="flex-1 overflow-y-auto p-4 space-y-2 overflow-x-hidden">
-            <a href="#" onclick="switchView('dashboard_analytics')" class="nav-item flex items-center p-3 rounded-lg hover:bg-brand-50 hover:text-brand-600 transition-all active-nav bg-brand-50 text-brand-600 font-semibold" data-view="dashboard_analytics">
-                <div class="w-8 flex justify-center flex-shrink-0"><i class="fa-solid fa-chart-pie text-lg"></i></div><span class="ml-3">Dashboard Analytics</span>
+        <nav class="flex-1 overflow-y-auto p-2 space-y-0.5 overflow-x-hidden scrollbar-thin">
+            <a href="#" onclick="switchView('dashboard_analytics')" class="nav-item flex items-center p-2 rounded-lg hover:bg-brand-50 hover:text-brand-600 transition-all active-nav bg-brand-50 text-brand-600 font-semibold text-[13px]" data-view="dashboard_analytics">
+                <div class="w-6 flex justify-center flex-shrink-0"><i class="fa-solid fa-chart-pie text-sm"></i></div><span class="ml-2">Dashboard Analytics</span>
             </a>
-            <a href="#" onclick="switchView('calendar')" class="nav-item flex items-center p-3 rounded-lg hover:bg-brand-50 hover:text-brand-600 transition-all group" data-view="calendar">
-                <div class="w-8 flex justify-center flex-shrink-0"><i class="fa-regular fa-calendar-days text-lg"></i></div><span class="ml-3">ปฏิทินงาน (Calendar)</span>
+            <a href="#" onclick="switchView('calendar')" class="nav-item flex items-center p-2 rounded-lg hover:bg-brand-50 hover:text-brand-600 transition-all group text-[13px]" data-view="calendar">
+                <div class="w-6 flex justify-center flex-shrink-0"><i class="fa-regular fa-calendar-days text-sm"></i></div><span class="ml-2">ปฏิทิน (Calendar)</span>
             </a>
-            <a href="#" onclick="switchView('plan_interruption')" class="nav-item flex items-center p-3 rounded-lg hover:bg-brand-50 hover:text-brand-600 transition-all group" data-view="plan_interruption">
-                <div class="w-8 flex justify-center flex-shrink-0"><i class="fa-solid fa-clipboard-list text-lg group-hover:text-brand-500"></i></div>
-                <span class="ml-3">Interruption Plan</span>
+            <a href="#" onclick="switchView('plan_interruption')" class="nav-item flex items-center p-2 rounded-lg hover:bg-brand-50 hover:text-brand-600 transition-all group text-[13px]" data-view="plan_interruption">
+                <div class="w-6 flex justify-center flex-shrink-0"><i class="fa-solid fa-clipboard-list text-sm group-hover:text-brand-500"></i></div>
+                <span class="ml-2">Interruption Plan</span>
                 <!-- Badge for Plan -->
-                <span id="badge-plan_interruption" class="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full hidden shadow-sm transform scale-100 transition-transform duration-200">0</span>
+                <span id="badge-plan_interruption" class="ml-auto bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden shadow-sm transform scale-100 transition-transform duration-200">0</span>
             </a>
             
             <!-- Summary Plan Menu -->
             <div>
-                <button onclick="toggleSubmenu('summary-menu', this)" class="w-full flex items-center justify-between p-3 rounded-lg text-gray-700 hover:bg-brand-50 hover:text-brand-600 transition-all group">
+                <button onclick="toggleSubmenu('summary-menu', this)" class="w-full flex items-center justify-between p-2 rounded-lg text-gray-700 hover:bg-brand-50 hover:text-brand-600 transition-all group text-[13px]">
                     <div class="flex items-center">
-                        <div class="w-8 flex justify-center flex-shrink-0"><i class="fa-solid fa-file-contract text-lg group-hover:text-brand-500"></i></div>
-                        <span class="ml-3">Project Plan</span>
+                        <div class="w-6 flex justify-center flex-shrink-0"><i class="fa-solid fa-file-contract text-sm group-hover:text-brand-500"></i></div>
+                        <span class="ml-2">Project Plan</span>
                     </div>
                     <div class="flex items-center">
                         <!-- Parent Badge for Summary -->
-                        <span id="badge-parent-summary" class="mr-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full hidden shadow-sm">0</span>
-                        <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 text-gray-400"></i>
+                        <span id="badge-parent-summary" class="mr-1.5 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden shadow-sm">0</span>
+                        <i class="fa-solid fa-chevron-down text-[9px] transition-transform duration-300 text-gray-400"></i>
                     </div>
                 </button>
-                <div id="summary-menu" class="submenu pl-4 space-y-1 mt-1">
-                    <a href="#" onclick="switchView('summary_plan')" class="block p-2 rounded-md text-sm text-gray-600 hover:text-brand-600 hover:bg-brand-50 pl-12 border-l-2 border-transparent hover:border-brand-300 font-medium flex justify-between items-center" data-view="summary_plan">
-                        <span><i class="fa-solid fa-list mr-2 text-xs"></i>Job List</span>
-                        <span id="badge-summary_plan" class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full hidden">0</span>
+                <div id="summary-menu" class="submenu pl-2 space-y-0.5 mt-0.5">
+                    <a href="#" onclick="switchView('summary_plan')" class="block p-1.5 rounded-md text-[12px] text-gray-600 hover:text-brand-600 hover:bg-brand-50 pl-8 border-l-2 border-transparent hover:border-brand-300 font-medium flex justify-between items-center" data-view="summary_plan">
+                        <span><i class="fa-solid fa-list mr-1.5 text-[9px]"></i>Job List</span>
+                        <span id="badge-summary_plan" class="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
                     </a>
-                    <a href="#" onclick="switchView('summary_dashboard')" class="block p-2 rounded-md text-sm text-gray-600 hover:text-brand-600 hover:bg-brand-50 pl-12 border-l-2 border-transparent hover:border-brand-300 font-medium" data-view="summary_dashboard"><i class="fa-solid fa-chart-simple mr-2 text-xs"></i>Dashboard Project</a>
+                    <a href="#" onclick="switchView('summary_dashboard')" class="block p-1.5 rounded-md text-[12px] text-gray-600 hover:text-brand-600 hover:bg-brand-50 pl-8 border-l-2 border-transparent hover:border-brand-300 font-medium" data-view="summary_dashboard"><i class="fa-solid fa-chart-simple mr-1.5 text-[9px]"></i>Dashboard Project</a>
                 </div>
             </div>
 
-            <a href="#" onclick="switchView('team', 'Interruption Team')" class="nav-item flex items-center p-3 rounded-lg text-gray-700 hover:bg-brand-50 hover:text-brand-600 transition-all" data-view="team">
-                <div class="w-8 flex justify-center flex-shrink-0"><i class="fa-solid fa-users text-lg"></i></div>
-                <span class="ml-3">Interruption Team</span>
+            <a href="#" onclick="switchView('team', 'Interruption Team')" class="nav-item flex items-center p-2 rounded-lg text-gray-700 hover:bg-brand-50 hover:text-brand-600 transition-all text-[13px]" data-view="team">
+                <div class="w-6 flex justify-center flex-shrink-0"><i class="fa-solid fa-users text-sm"></i></div>
+                <span class="ml-2">Interruption Team</span>
                 <!-- Badge for Team -->
-                <span id="badge-team" class="ml-auto bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full hidden shadow-sm">0</span>
+                <span id="badge-team" class="ml-auto bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden shadow-sm">0</span>
+            </a>
+            
+            <a href="#" onclick="switchView('request_job', 'Request Job')" class="nav-item flex items-center p-2 rounded-lg text-gray-700 hover:bg-brand-50 hover:text-brand-600 transition-all text-[13px]" data-view="request_job">
+                <div class="w-6 flex justify-center flex-shrink-0"><i class="fa-solid fa-code-pull-request text-sm"></i></div>
+                <span class="ml-2">Request Job</span>
+                <!-- Badge for Request Job -->
+                <span id="badge-request_job" class="ml-auto bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden shadow-sm">0</span>
             </a>
             <div>
-                <button onclick="toggleSubmenu('subcontractor-menu', this)" class="w-full flex items-center justify-between p-3 rounded-lg text-gray-700 hover:bg-brand-50 hover:text-brand-600 transition-all group">
+                <button onclick="toggleSubmenu('subcontractor-menu', this)" class="w-full flex items-center justify-between p-2 rounded-lg text-gray-700 hover:bg-brand-50 hover:text-brand-600 transition-all group text-[13px]">
                     <div class="flex items-center">
-                        <div class="w-8 flex justify-center flex-shrink-0"><i class="fa-solid fa-helmet-safety text-lg group-hover:text-brand-500"></i></div>
-                        <span class="ml-3">Subcontractor</span>
+                        <div class="w-6 flex justify-center flex-shrink-0"><i class="fa-solid fa-helmet-safety text-sm group-hover:text-brand-500"></i></div>
+                        <span class="ml-2">Subcontractor</span>
                     </div>
                     <div class="flex items-center">
                         <!-- Parent Badge for Subcontractor -->
-                        <span id="badge-parent-sub" class="mr-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full hidden shadow-sm">0</span>
-                        <i class="fa-solid fa-chevron-down text-xs transition-transform duration-300 text-gray-400"></i>
+                        <span id="badge-parent-sub" class="mr-1.5 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden shadow-sm">0</span>
+                        <i class="fa-solid fa-chevron-down text-[9px] transition-transform duration-300 text-gray-400"></i>
                     </div>
                 </button>
-                <div id="subcontractor-menu" class="submenu pl-4 space-y-1 mt-1">
-                    <a href="#" onclick="switchView('sub_dashboard')" class="block p-2 rounded-md text-sm text-gray-600 hover:text-brand-600 hover:bg-brand-50 pl-12 border-l-2 border-transparent hover:border-brand-300 font-medium"><i class="fa-solid fa-chart-line mr-2 text-xs"></i>Dashboard & Cost</a>
-                    <a href="#" onclick="switchView('sub_preventive', 'Assignment Preventive')" class="block p-2 rounded-md text-sm text-gray-600 hover:text-brand-600 hover:bg-brand-50 pl-12 border-l-2 border-transparent hover:border-brand-300 flex justify-between items-center">
+                <div id="subcontractor-menu" class="submenu pl-2 space-y-0.5 mt-0.5">
+                    <a href="#" onclick="switchView('sub_dashboard')" class="block p-1.5 rounded-md text-[12px] text-gray-600 hover:text-brand-600 hover:bg-brand-50 pl-8 border-l-2 border-transparent hover:border-brand-300 font-medium"><i class="fa-solid fa-chart-line mr-1.5 text-[9px]"></i>Dashboard & Cost</a>
+                    <a href="#" onclick="switchView('sub_preventive', 'Assignment Preventive')" class="block p-1.5 rounded-md text-[12px] text-gray-600 hover:text-brand-600 hover:bg-brand-50 pl-8 border-l-2 border-transparent hover:border-brand-300 flex justify-between items-center" data-view="sub_preventive">
                         <span>Preventive</span>
-                        <span id="badge-sub_preventive" class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full hidden">0</span>
+                        <span id="badge-sub_preventive" class="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
                     </a>
-                    <a href="#" onclick="switchView('sub_reroute', 'Assignment Reroute')" class="block p-2 rounded-md text-sm text-gray-600 hover:text-brand-600 hover:bg-brand-50 pl-12 border-l-2 border-transparent hover:border-brand-300 flex justify-between items-center">
+                    <a href="#" onclick="switchView('sub_reroute', 'Assignment Reroute')" class="block p-1.5 rounded-md text-[12px] text-gray-600 hover:text-brand-600 hover:bg-brand-50 pl-8 border-l-2 border-transparent hover:border-brand-300 flex justify-between items-center" data-view="sub_reroute">
                         <span>Reroute</span>
-                        <span id="badge-sub_reroute" class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full hidden">0</span>
+                        <span id="badge-sub_reroute" class="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
                     </a>
-                    <a href="#" onclick="switchView('sub_reconfigure', 'Assignment Reconfigure')" class="block p-2 rounded-md text-sm text-gray-600 hover:text-brand-600 hover:bg-brand-50 pl-12 border-l-2 border-transparent hover:border-brand-300 flex justify-between items-center">
-                        <span>Reconfigure & Cancel</span>
-                        <span id="badge-sub_reconfigure" class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full hidden">0</span>
+                    <a href="#" onclick="switchView('sub_reconfigure', 'Assignment Reconfigure')" class="block p-1.5 rounded-md text-[12px] text-gray-600 hover:text-brand-600 hover:bg-brand-50 pl-8 border-l-2 border-transparent hover:border-brand-300 flex justify-between items-center" data-view="sub_reconfigure">
+                        <span>Reconfig & Cancel</span>
+                        <span id="badge-sub_reconfigure" class="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full hidden">0</span>
                     </a>
                 </div>
             </div>
             
             <!-- Setting Menu -->
-            <a href="#" id="nav-item-setting" onclick="switchView('setting')" class="nav-item flex items-center p-3 rounded-lg text-gray-700 hover:bg-brand-50 hover:text-brand-600 transition-all group" data-view="setting">
-                <div class="w-8 flex justify-center flex-shrink-0"><i class="fa-solid fa-gear text-lg group-hover:text-brand-500"></i></div><span class="ml-3">Setting</span>
+            <a href="#" id="nav-item-setting" onclick="switchView('setting')" class="nav-item flex items-center p-2 rounded-lg text-gray-700 hover:bg-brand-50 hover:text-brand-600 transition-all group text-[13px]" data-view="setting">
+                <div class="w-6 flex justify-center flex-shrink-0"><i class="fa-solid fa-gear text-sm group-hover:text-brand-500"></i></div><span class="ml-2">Setting</span>
             </a>
 
             <!-- Link Support Menu (Added) -->
-            <a href="#" onclick="switchView('link_support')" class="nav-item flex items-center p-3 rounded-lg text-gray-700 hover:bg-brand-50 hover:text-brand-600 transition-all group" data-view="link_support">
-                <div class="w-8 flex justify-center flex-shrink-0"><i class="fa-solid fa-link text-lg group-hover:text-brand-500"></i></div><span class="ml-3">Link Support</span>
+            <a href="#" onclick="switchView('link_support')" class="nav-item flex items-center p-2 rounded-lg text-gray-700 hover:bg-brand-50 hover:text-brand-600 transition-all group text-[13px]" data-view="link_support">
+                <div class="w-6 flex justify-center flex-shrink-0"><i class="fa-solid fa-link text-sm group-hover:text-brand-500"></i></div><span class="ml-2">Link Support</span>
             </a>
         </nav>
-        <div class="p-4 border-t border-gray-100 text-xs text-gray-400 text-center bg-gray-50"><p>© 2026 Assignment Interruption V.4</p></div>
+        <div class="p-2 border-t border-gray-100 text-[10px] text-gray-400 text-center bg-gray-50 flex-shrink-0"><p>© 2026 Assignment Interruption</p></div>
     </aside>
     
     <!-- Main Content -->

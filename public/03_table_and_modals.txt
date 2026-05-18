@@ -2,7 +2,7 @@
     </main>
 
     <!-- ASSIGNMENT MODAL -->
-    <div id="assignment-modal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div id="assignment-modal" class="fixed inset-0 z-[80] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
             <div class="fixed inset-0 bg-gray-900 bg-opacity-60 transition-opacity backdrop-blur-sm" onclick="closeModal()"></div>
             <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl w-full border border-gray-100">
@@ -112,7 +112,7 @@
                             <div class="col-span-1 md:col-span-2 not-plan-only summary-plan-hide"><label>GPS (Multi-line)</label><textarea id="form-gps" rows="3" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" placeholder="วางพิกัดได้หลายบรรทัด"></textarea><button type="button" onclick="getLocation()" class="text-brand-500 text-xs mt-1 hover:underline"><i class="fa-solid fa-location-crosshairs"></i> Get Location</button></div>
                             <div class="col-span-1 md:col-span-2 summary-plan-hide"><label>Remark</label><input type="text" id="form-remark" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
                             
-                            <div class="col-span-1 md:col-span-3 not-plan-only summary-plan-hide"><label>Image/File แนบรูปหรือไฟล์</label><div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-brand-50 hover:border-brand-300 cursor-pointer relative bg-gray-50 transition group"><input type="file" id="form-file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx"><div class="flex flex-col items-center"><i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 group-hover:text-brand-500 mb-2 transition"></i><p class="text-sm text-gray-600 font-medium" id="file-name-display">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</p></div></div><div id="existing-file-link" class="mt-2 text-xs text-brand-600 hidden font-medium flex items-center"><i class="fa-solid fa-paperclip mr-1"></i> <a href="#" target="_blank" class="hover:underline">ดูไฟล์เดิม</a></div></div>
+                            <div class="col-span-1 md:col-span-3 not-plan-only summary-plan-hide"><label>Image/File แนบรูปหรือไฟล์ (เพิ่มได้หลายไฟล์)</label><div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-brand-50 hover:border-brand-300 cursor-pointer relative bg-gray-50 transition group"><input type="file" id="form-file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" multiple><div class="flex flex-col items-center"><i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-400 group-hover:text-brand-500 mb-2 transition"></i><p class="text-sm text-gray-600 font-medium" id="file-name-display">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่ (เลือกได้หลายไฟล์)</p></div></div><div id="existing-file-link" class="mt-2 text-xs text-brand-600 hidden font-medium flex flex-col gap-1 items-start"></div></div>
                             
                             <!-- Actions Copy for Summary Plan -->
                             <div id="summary-copy-actions" class="hidden col-span-full flex gap-2 justify-end">
@@ -129,6 +129,155 @@
         </div>
     </div>
 
+    <!-- NPD PROJECT MODAL -->
+    <div id="npd-project-modal" class="fixed inset-0 hidden overflow-y-auto" style="z-index: 60;" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-60 transition-opacity backdrop-blur-sm" onclick="closeNpdProjectModal()"></div>
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-6xl w-full border border-gray-100 flex flex-col max-h-[90vh]">
+                <div class="bg-indigo-50 px-8 py-5 border-b border-indigo-100 flex justify-between items-center shrink-0">
+                    <h3 class="text-2xl font-bold text-indigo-900 flex items-center"><i class="fa-solid fa-tasks mr-3 text-indigo-600"></i> View Assignment</h3>
+                    <button type="button" onclick="closeNpdProjectModal()" class="text-indigo-400 hover:text-indigo-600 transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
+                </div>
+                <div class="p-8 flex-1 overflow-y-auto bg-gray-50">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-col md:flex-row gap-4 justify-between items-center">
+                        <div>
+                            <span class="text-sm font-bold text-gray-500 block mb-1">Project Code</span>
+                            <span id="npd-modal-project-display" class="text-xl font-bold text-gray-800"></span>
+                        </div>
+                        <div class="w-full md:w-auto flex gap-2">
+                            <button id="btn-open-npd-form" onclick="openNpdAssignmentForm()" class="flex-1 md:flex-none bg-indigo-600 text-white px-6 py-2.5 rounded-lg hover:bg-indigo-700 shadow-md transition font-medium text-sm whitespace-nowrap cursor-pointer"><i class="fa-solid fa-plus mr-2"></i> Add Assignment</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto min-h-[300px]">
+                            <table class="w-full text-left border-collapse whitespace-nowrap text-sm">
+                                <thead class="bg-gray-100 text-gray-600 text-xs uppercase font-semibold">
+                                    <tr>
+                                        <th class="px-4 py-3 border-b border-gray-200">Assignment Code</th>
+                                        <th class="px-4 py-3 border-b border-gray-200">Job Type</th>
+                                        <th class="px-4 py-3 border-b border-gray-200">Job SSF</th>
+                                        <th class="px-4 py-3 border-b border-gray-200">Project</th>
+                                        <th class="px-4 py-3 border-b border-gray-200">Cable Code</th>
+                                        <th class="px-4 py-3 border-b border-gray-200">Job Description</th>
+                                        <th class="px-4 py-3 border-b border-gray-200">Detail</th>
+                                        <th class="px-4 py-3 border-b border-gray-200">GPS</th>
+                                        <th class="px-4 py-3 border-b border-gray-200">Request AS Date</th>
+                                        <th class="px-4 py-3 border-b border-gray-200">Assign NPD Date</th>
+                                        <th class="px-4 py-3 border-b border-gray-200">Assign NPD By</th>
+                                        <th class="px-4 py-3 border-b border-gray-200">Assign NS By</th>
+                                        <th class="px-4 py-3 border-b border-gray-200">Subcontractor</th>
+                                        <th class="px-4 py-3 border-b border-gray-200">Con Type</th>
+                                        <th class="px-4 py-3 border-b border-gray-200">Req. Kavis</th>
+                                        <th class="px-4 py-3 border-b border-gray-200">Confirm Kavis Row</th>
+                                        <th class="px-4 py-3 border-b border-gray-200">Status Kavis Row</th>
+                                        <th class="px-4 py-3 border-b border-gray-200">Status</th>
+                                        <th class="px-4 py-3 border-b border-gray-200 text-center sticky right-0 bg-gray-100 shadow-sm w-28 text-[10px]">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="npd-assignment-table-body" class="divide-y divide-gray-100">
+                                    <tr><td colspan="19" class="py-12 text-center text-gray-400"><i class="fa-solid fa-arrow-up text-3xl mb-3"></i><p>กรุณากรอก Project Code และกดค้นหา</p></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NPD ASSIGNMENT FORM MODAL -->
+    <div id="npd-assignment-form-modal" class="fixed inset-0 hidden overflow-y-auto" style="z-index: 70;" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-60 transition-opacity backdrop-blur-sm" onclick="closeNpdAssignmentForm()"></div>
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-5xl w-full border border-gray-100">
+                <form id="npd-assignment-form" onsubmit="return false;">
+                    <div class="bg-indigo-600 px-8 py-5 flex justify-between items-center text-white">
+                        <h3 class="text-xl font-bold flex items-center"><i class="fa-solid fa-file-pen mr-3"></i> ฟอร์มบันทึก Assignment (NPD)</h3>
+                    </div>
+                    <input type="hidden" id="npd-form-doc-id">
+                    <div class="bg-white px-8 py-6 max-h-[70vh] overflow-y-auto text-left">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                            
+                            <!-- ROW 1 -->
+                            <div><label class="block text-sm font-bold text-gray-700 mb-1">Project Code <span class="text-red-500">*</span></label><input type="text" id="npd-form-project-code" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" required></div>
+                            <div><label class="block text-sm font-bold text-gray-700 mb-1">รหัส Assignment <span class="text-red-500">*</span></label><input type="text" id="npd-form-assignment" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" required></div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Job Type <span class="text-red-500">*</span></label>
+                                <select id="npd-form-jobtype" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" required>
+                                    <option value="">เลือก...</option>
+                                    <option value="Reroute&MOI">Reroute&MOI</option>
+                                    <option value="Cancel&Remove Cable">Cancel&Remove Cable</option>
+                                    <option value="Create New Route">Create New Route</option>
+                                    <option value="Underground">Underground</option>
+                                </select>
+                            </div>
+                            <div><label class="block text-sm font-bold text-gray-700 mb-1">Job SSF</label><input type="text" id="npd-form-jobssf" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+
+                            <!-- ROW 2 -->
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Project <span class="text-red-500">*</span></label>
+                                <select id="npd-form-project" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" required>
+                                    <option value="">เลือก...</option>
+                                    <option value="MOI">MOI</option>
+                                    <option value="Reroute">Reroute</option>
+                                    <option value="Sharing Underground">Sharing Underground</option>
+                                    <option value="Improvement">Improvement</option>
+                                    <option value="Cancel Site">Cancel Site</option>
+                                    <option value="Site Relocation">Site Relocation</option>
+                                </select>
+                            </div>
+                            <div class="col-span-1 md:col-span-2"><label class="block text-sm font-bold text-gray-700 mb-1">Cable Code</label><input type="text" id="npd-form-cablecode" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+
+                            <!-- ROW 3 -->
+                            <div class="col-span-1 md:col-span-3"><label class="block text-sm font-bold text-gray-700 mb-1">Job Description</label><textarea id="npd-form-jobdt" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" rows="2"></textarea></div>
+                            <div class="col-span-1 md:col-span-3"><label class="block text-sm font-bold text-gray-700 mb-1">Detail</label><textarea id="npd-form-detail" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" rows="3"></textarea></div>
+                            <div class="col-span-1 md:col-span-3">
+                                <label class="block text-sm font-bold text-gray-700 mb-1">GPS <button type="button" onclick="getLocationNpd()" class="ml-2 text-indigo-500 hover:text-indigo-700 text-xs font-normal"><i class="fa-solid fa-location-crosshairs mr-1"></i> Get Location</button></label>
+                                <textarea id="npd-form-gps" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" rows="2" placeholder="สามารถวางพิกัดได้"></textarea>
+                            </div>
+
+                            <!-- ROW 4 -->
+                            <div><label class="block text-sm font-bold text-gray-700 mb-1">Request AS Date</label><input type="date" id="npd-form-req-as-date" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                            <div><label class="block text-sm font-bold text-gray-700 mb-1">Assign Job by NPD Date</label><input type="date" id="npd-form-assign-npd-date" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                            <div><label class="block text-sm font-bold text-gray-700 mb-1">Assign Job by NPD</label><input type="text" id="npd-form-assign-npd" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm bg-gray-50" readonly placeholder="ดึงชื่อจากระบบ"></div>
+
+                            <!-- ROW 5 -->
+                            <div><label class="block text-sm font-bold text-gray-700 mb-1">Assign NS By</label><select id="npd-form-assign-ns" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"><option value="">เลือกออโต้ หรือ ป้อนเองก็ได้</option></select></div>
+                            <div><label class="block text-sm font-bold text-gray-700 mb-1">Subcontractor <span class="text-red-500">*</span></label><select id="npd-form-subcontractor" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" required><option value="">เลือก...</option></select></div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">แบบคอนไฟฟ้า</label>
+                                <select id="npd-form-contype" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm">
+                                    <option value="">เลือก...</option>
+                                    <option value="ส่งแบบคอนและรายการคำนวณ">ส่งแบบคอนและรายการคำนวณ</option>
+                                    <option value="แนบไฟล์รายการรื่อถอน">แนบไฟล์รายการรื่อถอน</option>
+                                </select>
+                            </div>
+
+                            <!-- ROW 6 -->
+                            <div><label class="block text-sm font-bold text-gray-700 mb-1">Request Kavis</label><input type="text" id="npd-form-req-kavis" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm"></div>
+                            <div class="col-span-1 md:col-span-2"><label class="block text-sm font-bold text-gray-700 mb-1">Confirm Kavis by ROW</label><textarea id="npd-form-confirm-kavis" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm" rows="2"></textarea></div>
+                            
+                            <!-- ROW 7 -->
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Status Kavis by ROW</label>
+                                <select id="npd-form-status-kavis" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm">
+                                    <option value="">เลือก...</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Done">Done</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-8 py-4 sm:flex sm:flex-row-reverse border-t border-gray-200">
+                        <button type="button" onclick="saveNpdAssignment()" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-6 py-2.5 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm transition"><i class="fa-solid fa-save mr-2 mt-0.5"></i> บันทึกข้อมูล</button>
+                        <button type="button" onclick="closeNpdAssignmentForm()" class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-6 py-2.5 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm transition">ยกเลิก</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         // === GLOBAL SETUP ===
 		const appId = 'assignment-app'; 
@@ -138,7 +287,7 @@
         const supabaseKey = "sb_publishable__qYLRgzCMAI5UIWIpESjiw_ig15o_S1";
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
         
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbx5KFStUdu_gJ-FmB99YluYydM6ObImyUqrF2vGh6DO1gCAK5JWIxz5AGG40B_iViiULQ/exec";
+        const GAS_URL = "";
 
         let assignments = [];
         let masterData = {};
@@ -172,7 +321,7 @@
                 reconfigure: ["Reconfig high loss", "Reconfig New Route","Cancle OFC","Special Job", "Other"] 
             } 
         };
-        const menuConfig = { 'plan_interruption': { title: 'Interruption Plan', isSub: false, isPlan: true, prefix: 'IP', jobTypeKey: 'plan', sheetName: 'Interruption Plan' }, 'summary_plan': { title: 'Project Plan', isSub: false, isPlan: true, prefix: 'Sum', jobTypeKey: 'summary_plan', sheetName: 'Summary Plan' }, 'team': { title: 'Assignment Interruption Team', isSub: false, prefix: 'AI', jobTypeKey: 'team', sheetName: 'Interruption Team' }, 'sub_preventive': { title: 'Assignment Preventive', isSub: true, prefix: 'PVT', jobTypeKey: 'preventive', sheetName: 'Assignment Preventive' }, 'sub_reroute': { title: 'Assignment Reroute', isSub: true, prefix: 'RER', jobTypeKey: 'reroute', sheetName: 'Assignment Reroute' }, 'sub_reconfigure': { title: 'Assignment Reconfigure & Cancel', isSub: true, prefix: 'REF', jobTypeKey: 'reconfigure', sheetName: 'Assignment Reconfigure' }, 'dashboard_analytics': { title: 'Dashboard Analytics', isSub: false, isPlan: false, prefix: 'DB', jobTypeKey: 'team' }, 'sub_dashboard': { title: 'Dashboard Subcontractor', isSub: false, isPlan: false, prefix: 'DBS', jobTypeKey: 'preventive' } };
+        const menuConfig = { 'plan_interruption': { title: 'Interruption Plan', isSub: false, isPlan: true, prefix: 'IP', jobTypeKey: 'plan', sheetName: 'Interruption Plan' }, 'summary_plan': { title: 'Project Plan', isSub: false, isPlan: true, prefix: 'Sum', jobTypeKey: 'summary_plan', sheetName: 'Summary Plan' }, 'team': { title: 'Assignment Interruption Team', isSub: false, prefix: 'AI', jobTypeKey: 'team', sheetName: 'Interruption Team' }, 'request_job': { title: 'Request Job', isSub: false, prefix: 'RJ', jobTypeKey: 'team', sheetName: 'Request Job' }, 'sub_preventive': { title: 'Assignment Preventive', isSub: true, prefix: 'PVT', jobTypeKey: 'preventive', sheetName: 'Assignment Preventive' }, 'sub_reroute': { title: 'Assignment Reroute', isSub: true, prefix: 'RER', jobTypeKey: 'reroute', sheetName: 'Assignment Reroute' }, 'sub_reconfigure': { title: 'Assignment Reconfigure & Cancel', isSub: true, prefix: 'REF', jobTypeKey: 'reconfigure', sheetName: 'Assignment Reconfigure' }, 'dashboard_analytics': { title: 'Dashboard Analytics', isSub: false, isPlan: false, prefix: 'DB', jobTypeKey: 'team' }, 'sub_dashboard': { title: 'Dashboard Subcontractor', isSub: false, isPlan: false, prefix: 'DBS', jobTypeKey: 'preventive' } };
         
         function fmtDate(s, d) { if(!s) return '-'; let dt; if(s.seconds) dt = new Date(s.seconds*1000); else dt=new Date(s); if(isNaN(dt.getTime())) return '-'; const day=dt.getDate(), m=dt.getMonth()+1, y=dt.getFullYear()+543, h=String(dt.getHours()).padStart(2,'0'), mn=String(dt.getMinutes()).padStart(2,'0'); return d ? `${day}/${m}/${y}` : `${day}/${m}/${y} ${h}:${mn}`; }
         function extractNS(d) { const a=Array.isArray(d)?d:(d?[d]:[]); const names=[], phones=[]; a.forEach(s=>{ if(s.includes(' - ')){ const p=s.split(' - '); names.push(p[0]); phones.push(p[1]); } else { names.push(s); } }); return {names:names.join(', '), phones:phones.join(', ') || '-'}; }
